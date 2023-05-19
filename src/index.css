@@ -1,0 +1,55 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.leaflet-container {
+  width: 700px;
+  height: 400px;
+  margin: 10px;
+}
+
+.date-container {
+  display: flex;
+}
+
+.date {
+  margin-right: 30px;
+}
+.date-input {
+  width: 80px;
+}
+
+.date-input2 {
+  width: 120px;
+  font-family: "Roboto","Helvetica","Arial",sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.4375em;
+  border-radius: 4px;
+  box-sizing: border-box;
+  padding: 6.5px 14px;
+  margin: 8px;
+}
+
+.use-seat-date {
+  display: none;
+}
+
+.unuse-seat-date {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.unuse {
+  display: none;
+}
