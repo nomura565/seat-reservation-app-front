@@ -121,8 +121,12 @@ const LeafletMarker = ({props, map}) => {
       .then((response) => {
         //console.log(response);
         if(response.status === 200){
+          setUserName(userName);
           setDefaultUserName(userName);
           setPopupText(userName);
+          let tmpDate = props.getSelectedDate();
+          setFromDate(formatDate(tmpDate));
+          setToDate(tmpDate);
           dialogOpen(useSeatResultText, 
             userName + "さんを" + from_date + "～" + to_date + "で座席登録しました。");
         }else{
