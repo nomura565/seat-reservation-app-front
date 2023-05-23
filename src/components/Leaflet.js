@@ -82,7 +82,6 @@ const LeafletMain = (props, ref) => {
             key={seat.key}
             props={{
               key: seat.key,
-              tmp: seat.key,
               position: seat.position,
               seatId: seat.seat_id,
               userName: seat.user_name,

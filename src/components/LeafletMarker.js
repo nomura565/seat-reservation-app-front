@@ -129,6 +129,7 @@ const LeafletMarker = ({props, map}) => {
           setToDate(tmpDate);
           dialogOpen(useSeatResultText, 
             userName + "さんを" + from_date + "～" + to_date + "で座席登録しました。");
+          setUseSeatFlg(argFlg);
         }else{
           //console.log(response);
           dialogOpen(APIErrorResultText, "登録に失敗しました。ページを再読み込みしてから再登録してください。");
@@ -165,6 +166,7 @@ const LeafletMarker = ({props, map}) => {
           setToDate(tmpDate);
           dialogOpen(unUseSeatResultText, 
             from_date + "の座席を空席にしました。");
+          setUseSeatFlg(argFlg);
         }else{
           //console.log(response);
           dialogOpen(APIErrorResultText, "登録に失敗しました。ページを再読み込みしてから再登録してください。");
@@ -179,8 +181,6 @@ const LeafletMarker = ({props, map}) => {
       });;
 
     }
-
-    setUseSeatFlg(argFlg);
     map.closePopup();
     //console.log(argFlg);
   };
@@ -208,6 +208,8 @@ const LeafletMarker = ({props, map}) => {
         let tmpDate = props.getSelectedDate();
         setFromDate(formatDate(tmpDate));
         setToDate(tmpDate);
+      }else{
+        currentUpdateMode = UpdateMode.default;
       }
     }
   })
