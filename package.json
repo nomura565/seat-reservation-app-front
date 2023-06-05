@@ -1,6 +1,6 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
+  "name": "seat-reservation-app-front",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.10.6",
@@ -43,5 +43,12 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "author": "Yusuke Nomura",
+  "license": "MIT",
+  "homepage": "https://github.com/nomura565/seat-reservation-app-front",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nomura565/seat-reservation-app-front.git"
   }
 }
