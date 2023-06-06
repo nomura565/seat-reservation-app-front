@@ -1,6 +1,6 @@
 import { icon } from 'leaflet';
 import React, { useState,useRef  } from 'react'
-import { Marker, Popup,Tooltip,useMapEvents } from 'react-leaflet'
+import { Marker, Popup,Tooltip,useMapEvents, useMap } from 'react-leaflet'
 
 import Box from '@mui/material/Box';
 import { TextField,Button,ButtonGroup } from "@mui/material";
@@ -21,7 +21,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 
 var occupyIcon = new icon({
   iconUrl: 'occupy.png',
-  iconSize:     [14, 25], // size of the icon
+  iconSize:     [25, 25], // size of the icon
 });
 
 var freeIcon = new icon({
@@ -192,6 +192,8 @@ const LeafletMarker = ({props, map}) => {
     setToDate(selectedDate);
   }
 
+  const parentMap = useMap();
+
   const mapEvents = useMapEvents({
     popupopen(e) {
       //console.log("popupopen");
@@ -199,6 +201,11 @@ const LeafletMarker = ({props, map}) => {
       let tmpDate = props.getSelectedDate();
       setFromDate(formatDate(tmpDate));
       setToDate(tmpDate);
+
+      setTimeout(function(){
+        parentMap.setView(e.popup._latlng, parentMap.getZoom());
+      }, 10);
+
     },
     popupclose(e) {
       //console.log("popupclose");

@@ -46,7 +46,7 @@
   },
   "author": "Yusuke Nomura",
   "license": "MIT",
-  "homepage": "https://github.com/nomura565/seat-reservation-app-front",
+  "homepage": ".",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nomura565/seat-reservation-app-front.git"
