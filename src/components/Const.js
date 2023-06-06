@@ -1,4 +1,4 @@
-import {  format,parse } from "date-fns";
+import {  format } from "date-fns";
 import ja from 'date-fns/locale/ja';
 
 export const BASE_URL = 'http://localhost:3000/api/seats/';

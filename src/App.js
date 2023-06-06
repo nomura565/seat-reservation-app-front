@@ -46,7 +46,7 @@ Leaflet.Icon.Default.imagePath =
       setFloor(e.target.value);
 
       let temp = floorList.find(floor => floor["floor_id"] === e.target.value);
-      console.log(temp);
+      //console.log(temp);
       childRef.current.setFloorMapFromParent(temp["floor_map"]);
       childRef.current.changeSeatList(seatDate, e.target.value);
     };
@@ -60,6 +60,14 @@ Leaflet.Icon.Default.imagePath =
       }catch{
         console.log("不正な日付");
       }
+    }
+
+    const getSeatDate = () => {
+      return seatDate;
+    }
+
+    const getFloor = () => {
+      return floor;
     }
 
     return (
@@ -102,6 +110,8 @@ Leaflet.Icon.Default.imagePath =
           ref={childRef}
           seatDate={seatDate}
           floor={floor}
+          getSeatDate={getSeatDate}
+          getFloor={getFloor}
         />
       </div>
     );

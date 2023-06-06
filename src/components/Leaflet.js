@@ -19,6 +19,11 @@ const LeafletMain = (props, ref) => {
     return seatDate;
   }
 
+  const getCurrentSeatList = () => {
+    //console.log("props.getCurrentSeatList");
+    return getSeatList(props.getSeatDate(), props.getFloor());
+  }
+
   const getSeatList = (date, floor) => {
     let selectedDate = formatDate(date);
     setSeatDate(date);
@@ -85,7 +90,8 @@ const LeafletMain = (props, ref) => {
               position: seat.position,
               seatId: seat.seat_id,
               userName: seat.user_name,
-              getSelectedDate: getselectedDate
+              getSelectedDate: getselectedDate,
+              getCurrentSeatList: getCurrentSeatList
             }}
 
           />

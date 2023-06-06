@@ -3,7 +3,7 @@ import React, { useState,useRef  } from 'react'
 import { Marker, Popup,Tooltip,useMapEvents, useMap } from 'react-leaflet'
 
 import Box from '@mui/material/Box';
-import { TextField,Button,ButtonGroup } from "@mui/material";
+import { TextField,Button,ButtonGroup,FormControlLabel,Checkbox,Tooltip as MaterialTooltip } from "@mui/material";
 
 import { formatDate} from "./Const";
 
@@ -18,6 +18,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+
+import { useCookies } from "react-cookie";
 
 var occupyIcon = new icon({
   iconUrl: 'occupy.png',
@@ -47,8 +49,9 @@ const LeafletMarker = ({props, map}) => {
   var name = props.userName;
   var user_name = props.userName;
   //console.log(map);
+  const [cookies, setCookie, removeCookie] = useCookies();
   if(name == null){
-    user_name = "";
+    user_name = (cookies.userName !== 0) ? cookies.userName: "";
     flg = false;
     name = unUseSeatText;
   }
@@ -64,9 +67,11 @@ const LeafletMarker = ({props, map}) => {
   const [useSeatFlg, setUseSeatFlg] = useState(flg);
   const [seatId, setSeatId] = useState(props.seatId);
 
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const [dialogTitleMessage, setDialogTitleMessage] = useState(useSeatResultText);
   const [dialogContentMessage, setDialogContentMessage] = useState("");
+  const [refreshFlg, setRefreshFlg] = useState(false);
+  const [permanentFlg, setPermanentFlg] = useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -74,6 +79,12 @@ const LeafletMarker = ({props, map}) => {
 
   const handleClose = () => {
     setOpen(false);
+    
+    if(refreshFlg){
+      props.getCurrentSeatList();
+      setRefreshFlg(false);
+    }
+    
   };
 
   let popupRef = useRef();
@@ -84,6 +95,10 @@ const LeafletMarker = ({props, map}) => {
     setDialogTitleMessage(titleText);
     setDialogContentMessage(ContextText);
     handleClickOpen();
+  }
+  const InsertFail = () => {
+    setRefreshFlg(true);
+    dialogOpen(APIErrorResultText, "登録に失敗しました。座席一覧を再読み込みします。");
   }
 
   const onClickButton = (argFlg) => {
@@ -116,7 +131,8 @@ const LeafletMarker = ({props, map}) => {
         seat_id: seatId,
         from_date: from_date,
         to_date: to_date,
-        user_name: userName
+        user_name: userName,
+        permanent_flg: permanentFlg
       })
       .then((response) => {
         //console.log(response);
@@ -127,19 +143,22 @@ const LeafletMarker = ({props, map}) => {
           let tmpDate = props.getSelectedDate();
           setFromDate(formatDate(tmpDate));
           setToDate(tmpDate);
-          dialogOpen(useSeatResultText, 
-            userName + "さんを" + from_date + "～" + to_date + "で座席登録しました。");
+          let text = userName + "さんを" + from_date + "～" + to_date + "で座席登録しました。";
+          if(permanentFlg) text = userName + "さんを固定席で座席登録しました。";
+          dialogOpen(useSeatResultText, text);
           setUseSeatFlg(argFlg);
+          setRefreshFlg(true);
+          setCookie("userName", userName);
         }else{
           //console.log(response);
-          dialogOpen(APIErrorResultText, "登録に失敗しました。ページを再読み込みしてから再登録してください。");
+          InsertFail();
           return;
         }
         
       })
       .catch((response) => {
         //console.log(response);
-        dialogOpen(APIErrorResultText, "登録に失敗しました。ページを再読み込みしてから再登録してください。");
+        InsertFail();
         return;
       });
     } else {
@@ -167,16 +186,17 @@ const LeafletMarker = ({props, map}) => {
           dialogOpen(unUseSeatResultText, 
             from_date + "の座席を空席にしました。");
           setUseSeatFlg(argFlg);
+          setRefreshFlg(true);
         }else{
           //console.log(response);
-          dialogOpen(APIErrorResultText, "登録に失敗しました。ページを再読み込みしてから再登録してください。");
+          InsertFail();
           return;
         }
         
       })
       .catch((response) => {
         //console.log(response);
-        dialogOpen(APIErrorResultText, "登録に失敗しました。ページを再読み込みしてから再登録してください。");
+        InsertFail();
         return;
       });;
 
@@ -190,6 +210,10 @@ const LeafletMarker = ({props, map}) => {
 
   const toDateChange = (selectedDate) => {
     setToDate(selectedDate);
+  }
+
+  const handleChange = (e) => {
+    setPermanentFlg(e.target.checked);
   }
 
   const parentMap = useMap();
@@ -257,6 +281,12 @@ const LeafletMarker = ({props, map}) => {
                 closeOnSelect={true}
                 onChange={(selectedDate) => {toDateChange((selectedDate || Today))}}
               />
+              
+            </div>
+            <div className={useSeatFlg ? "unuse":""}>
+            <MaterialTooltip title="固定席の場合、他の席情報を強制的に削除します">
+                <FormControlLabel required control={<Checkbox onChange={handleChange} size="small" />} label="固定席にする" />
+              </MaterialTooltip>
             </div>
             <div><ButtonGroup size="small" aria-label="small button group">
             <div className={useSeatFlg ? "unuse":""}>
