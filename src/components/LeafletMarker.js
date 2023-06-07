@@ -148,7 +148,9 @@ const LeafletMarker = ({props, map}) => {
           dialogOpen(useSeatResultText, text);
           setUseSeatFlg(argFlg);
           setRefreshFlg(true);
-          setCookie("userName", userName);
+          const cookieDate = new Date();
+          cookieDate.setDate(cookieDate.getDate() + 7);
+          setCookie("userName", userName, { expires: cookieDate, path: '/' });
         }else{
           //console.log(response);
           InsertFail();
