@@ -90,6 +90,7 @@ const LeafletMain = (props, ref) => {
               position: seat.position,
               seatId: seat.seat_id,
               userName: seat.user_name,
+              isPermanent: (seat.seat_date === "XXXX/XX/XX")? true:false,
               getSelectedDate: getselectedDate,
               getCurrentSeatList: getCurrentSeatList
             }}

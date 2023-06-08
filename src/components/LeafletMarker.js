@@ -21,30 +21,34 @@ import DialogTitle from '@mui/material/DialogTitle';
 
 import { useCookies } from "react-cookie";
 
-var occupyIcon = new icon({
-  iconUrl: 'occupy.png',
-  iconSize:     [25, 25], // size of the icon
-});
-
-var freeIcon = new icon({
-  iconUrl: 'free.png',
-  iconSize:     [14, 25], // size of the icon
-});
-
-var UpdateMode = {
-  default : 1,
-  update : 2,
-  unseat : 3
-};
-
-let currentUpdateMode = UpdateMode.default;
-const unUseSeatText = "空席";
-const useSeatResultText = "座席登録";
-const unUseSeatResultText = "空席登録";
-const validationErrorResultText = "バリデーションエラー";
-const APIErrorResultText = "APIエラー";
-
 const LeafletMarker = ({props, map}) => {
+  const occupyIcon = new icon({
+    iconUrl: 'occupy.png',
+    iconSize:     [25, 25], // size of the icon
+  });
+  
+  const permanentIcon = new icon({
+    iconUrl: 'permanent.png',
+    iconSize:     [25, 25], // size of the icon
+  });
+  
+  const freeIcon = new icon({
+    iconUrl: 'free.png',
+    iconSize:     [14, 25], // size of the icon
+  });
+  
+  const UpdateMode = {
+    default : 1,
+    update : 2,
+    unseat : 3
+  };
+  
+  let currentUpdateMode = UpdateMode.default;
+  const unUseSeatText = "空席";
+  const useSeatResultText = "座席登録";
+  const unUseSeatResultText = "空席登録";
+  const validationErrorResultText = "バリデーションエラー";
+  const APIErrorResultText = "APIエラー";
   let flg = true;
   var name = props.userName;
   var user_name = props.userName;
@@ -247,9 +251,20 @@ const LeafletMarker = ({props, map}) => {
     }
   })
 
+  const getIcon = () => {
+    if(props.isPermanent){
+      return permanentIcon;
+    }
+    if(useSeatFlg){
+      return occupyIcon;
+    }else{
+      return freeIcon;
+    }
+  }
+
   return (
-        <Marker position={props.position} icon={useSeatFlg ? occupyIcon:freeIcon}>
-        <Tooltip><b>{popupText}</b></Tooltip>
+        <Marker position={props.position} icon={getIcon()}>
+        <Tooltip><b>{popupText}{props.isPermanent ? "（固定席）":""}</b></Tooltip>
           <Popup
             ref={(r) => {
               popupRef = r;
