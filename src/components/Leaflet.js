@@ -39,6 +39,7 @@ const LeafletMain = (props, ref) => {
       .then((response) => {
         //console.log(response.data);
         setSeatList(response.data);
+        onClickMyLocationButton();
       });
   }
 
