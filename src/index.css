@@ -53,3 +53,16 @@ code {
 .unuse {
   display: none;
 }
+
+.my-location-button {
+  margin: 80px 0px 0px 10px !important;
+  padding: 0px 0px !important;
+  min-width: 34px !important;
+  border: 2px solid #CCC !important;
+  z-index: 1000;
+  background-color: #FFFFFF !important;;
+}
+
+.my-location {
+  color:black;
+}

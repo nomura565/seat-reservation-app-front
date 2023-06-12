@@ -1,9 +1,12 @@
 import { LatLng,LatLngBounds,CRS } from 'leaflet';
 import React, { useState,useImperativeHandle,forwardRef,useEffect  } from 'react'
-import { MapContainer, TileLayer, ImageOverlay,useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, ImageOverlay,useMapEvents, useMap } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
 import {API_URL, formatDate} from "./Const";
+import MyLocationIcon from '@mui/icons-material/MyLocation';
+import { Button } from "@mui/material";
+
 
 function LocationMarker() {
   //onst [position, setPosition] = useState(null)
@@ -39,6 +42,10 @@ const LeafletMain = (props, ref) => {
       });
   }
 
+  const onClickMyLocationButton = () => {
+    map.setView(centerLatLng, map.getZoom());
+  }
+
   useEffect(() =>{
       getSeatList(props.seatDate, props.floor);
   },[props.seatDate, props.floor])
@@ -46,6 +53,7 @@ const LeafletMain = (props, ref) => {
   const [map, setMap] = useState();
   const [seatDate, setSeatDate] = useState(props.seatDate);
   const [floorMap, setFloorMap] = useState("office.png");
+  const centerLatLng = new LatLng(170, 300);
 
   useImperativeHandle(ref, () => ({
     changeSeatList: (date, floor) => {
@@ -63,7 +71,7 @@ const LeafletMain = (props, ref) => {
   return (
     <MapContainer
       crs={CRS.Simple}
-      center={new LatLng(170, 300)}
+      center={centerLatLng}
       zoom={0}
       maxZoom={1}
       ref={m => {
@@ -71,6 +79,13 @@ const LeafletMain = (props, ref) => {
         setMap(m);
       }}
     >
+      <Button 
+        variant="outlined" 
+        size="small"
+        className="my-location-button"
+        onClick={onClickMyLocationButton}>
+          <MyLocationIcon className="my-location" />
+      </Button>
       <TileLayer
         attribution='&copy; <a href="https://github.com/nomura565/">written by Yusuke Nomura</a>'
         url=""
