@@ -5,7 +5,8 @@ import LeafletMarker from './LeafletMarker';
 import axios from "axios";
 import {API_URL, formatDate} from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
-import { Button } from "@mui/material";
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { Button,ButtonGroup } from "@mui/material";
 
 
 function LocationMarker() {
@@ -44,7 +45,15 @@ const LeafletMain = (props, ref) => {
   }
 
   const onClickMyLocationButton = () => {
-    map.setView(centerLatLng, map.getZoom());
+    if(map !== undefined){
+      map.setView(centerLatLng, map.getZoom());
+    }
+  }
+
+  const onClickMyBadgeButton = () => {
+    setTooltipPermanent(!tooltipPermanent);
+    setSeatList([]);
+    getCurrentSeatList();
   }
 
   useEffect(() =>{
@@ -54,7 +63,7 @@ const LeafletMain = (props, ref) => {
   const [map, setMap] = useState();
   const [seatDate, setSeatDate] = useState(props.seatDate);
   const [floorMap, setFloorMap] = useState("office.png");
-  const centerLatLng = new LatLng(170, 300);
+  const centerLatLng = new LatLng(235, 400);
 
   useImperativeHandle(ref, () => ({
     changeSeatList: (date, floor) => {
@@ -64,10 +73,11 @@ const LeafletMain = (props, ref) => {
       setFloorMap(floor_map);
     }
   }))
-  const bounds = new LatLngBounds([0, 0], [360, 640]);
+  const bounds = new LatLngBounds([0, 0], [470, 835]);
 
   let tmpSeatList = [];
   const [seatList, setSeatList] = useState(tmpSeatList);
+  const [tooltipPermanent, setTooltipPermanent] = useState(true);
 
   return (
     <MapContainer
@@ -80,13 +90,27 @@ const LeafletMain = (props, ref) => {
         setMap(m);
       }}
     >
-      <Button 
-        variant="outlined" 
-        size="small"
-        className="my-location-button"
-        onClick={onClickMyLocationButton}>
-          <MyLocationIcon className="my-location" />
-      </Button>
+      <ButtonGroup
+        orientation="vertical"
+        aria-label="vertical contained button group"
+        variant="contained"
+        className="my-button-group"
+      >
+        <Button 
+          variant="outlined" 
+          size="small"
+          className="my-button my-location-button"
+          onClick={onClickMyLocationButton}>
+            <MyLocationIcon className="my-icon" />
+        </Button>
+        <Button 
+          variant="outlined" 
+          size="small"
+          className="my-button my-badge-button"
+          onClick={onClickMyBadgeButton}>
+            <VisibilityOffIcon className="my-icon" />
+        </Button>
+      </ButtonGroup>
       <TileLayer
         attribution='&copy; <a href="https://github.com/nomura565/">written by Yusuke Nomura</a>'
         url=""
@@ -106,9 +130,11 @@ const LeafletMain = (props, ref) => {
               position: seat.position,
               seatId: seat.seat_id,
               userName: seat.user_name,
+              tooltip_direction: seat.tooltip_direction,
               isPermanent: (seat.seat_date === "XXXX/XX/XX")? true:false,
               getSelectedDate: getselectedDate,
-              getCurrentSeatList: getCurrentSeatList
+              getCurrentSeatList: getCurrentSeatList,
+              tooltipPermanent:tooltipPermanent
             }}
 
           />

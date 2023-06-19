@@ -13,8 +13,8 @@ code {
 }
 
 .leaflet-container {
-  width: 700px;
-  height: 400px;
+  width: 900px;
+  height: 480px;
   margin: 10px;
 }
 
@@ -54,15 +54,26 @@ code {
   display: none;
 }
 
-.my-location-button {
-  margin: 80px 0px 0px 10px !important;
+.my-button {
   padding: 0px 0px !important;
   min-width: 34px !important;
   border: 2px solid #CCC !important;
   z-index: 1000;
-  background-color: #FFFFFF !important;;
+  background-color: #FFFFFF !important;
 }
 
-.my-location {
+.my-location-button {
+  margin: 80px 0px 0px 10px !important;
+}
+
+.my-badge-button {
+  margin: 5px 0px 0px 10px !important;
+}
+
+.my-icon {
   color:black;
+}
+
+.my-button-group {
+  box-shadow: none !important;
 }

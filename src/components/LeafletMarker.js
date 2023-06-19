@@ -76,6 +76,12 @@ const LeafletMarker = ({props, map}) => {
   const [dialogContentMessage, setDialogContentMessage] = useState("");
   const [refreshFlg, setRefreshFlg] = useState(false);
   const [permanentFlg, setPermanentFlg] = useState(false);
+  let tooltip_direction = props.tooltip_direction;
+  if(tooltip_direction == null){
+    tooltip_direction = "auto";
+  }
+  const [tooltipDirection, setTooltipDirection] = useState(tooltip_direction);
+  
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -264,7 +270,7 @@ const LeafletMarker = ({props, map}) => {
 
   return (
         <Marker position={props.position} icon={getIcon()}>
-        <Tooltip><b>{popupText}{props.isPermanent ? "（固定席）":""}</b></Tooltip>
+        <Tooltip direction={tooltipDirection} permanent={props.tooltipPermanent && useSeatFlg}><b>{popupText}{props.isPermanent ? "":""}</b></Tooltip>
           <Popup
             ref={(r) => {
               popupRef = r;
