@@ -116,7 +116,8 @@ const LeafletMarker = ({props, map}) => {
     let to_date;
 
     if(argFlg){
-      if(userName.trim() === ""){
+      let temp = (userName === null)? "":userName;
+      if(temp.trim() === ""){
         dialogOpen(validationErrorResultText, "名前が入力されていません。");
         return;
       }
