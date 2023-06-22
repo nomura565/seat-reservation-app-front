@@ -13,28 +13,33 @@ import "react-datetime/css/react-datetime.css";
 import axios from "axios";
 import {API_URL} from "./Const";
 
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import LeafletDialog from "./LeafletDialog";
 
 import { useCookies } from "react-cookie";
 
-const LeafletMarker = ({props, map}) => {
+const LeafletMarker = (props) => {
   const occupyIcon = new icon({
     iconUrl: 'occupy.png',
     iconSize:     [25, 25], // size of the icon
+    className:props.iconClass
   });
   
   const permanentIcon = new icon({
     iconUrl: 'permanent.png',
     iconSize:     [25, 25], // size of the icon
+    className:props.iconClass
+  });
+
+  const addIcon = new icon({
+    iconUrl: 'add.png',
+    iconSize:     [25, 25], // size of the icon
+    className:props.iconClass
   });
   
   const freeIcon = new icon({
     iconUrl: 'free.png',
     iconSize:     [14, 25], // size of the icon
+    className:props.iconClass
   });
   
   const UpdateMode = {
@@ -81,7 +86,8 @@ const LeafletMarker = ({props, map}) => {
     tooltip_direction = "auto";
   }
   const [tooltipDirection, setTooltipDirection] = useState(tooltip_direction);
-  
+  const [position, setPosition] = useState(props.position);
+  const [admin, setAdmin] = useState(props.admin);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -214,7 +220,7 @@ const LeafletMarker = ({props, map}) => {
       });;
 
     }
-    map.closePopup();
+    props.map.closePopup();
     //console.log(argFlg);
   };
   const userNameChange = (e) => {
@@ -230,6 +236,24 @@ const LeafletMarker = ({props, map}) => {
   }
 
   const parentMap = useMap();
+  const markerRef = useRef(null);
+
+  const eventHandlers = {
+    dragstart: () => {
+      const marker = markerRef.current;
+      marker.setOpacity(0.6);
+    },
+    dragend: () => {
+      const marker = markerRef.current;
+      const AfterPosition = marker.getLatLng()
+      marker.setOpacity(1);
+      setPosition([AfterPosition.lat, AfterPosition.lng]);
+      props.setPositionForSeatList(seatId, AfterPosition.lat, AfterPosition.lng);
+    },
+    click:() => {
+      props.markerDelete(seatId);
+    }
+  }
 
   const mapEvents = useMapEvents({
     popupopen(e) {
@@ -259,6 +283,12 @@ const LeafletMarker = ({props, map}) => {
   })
 
   const getIcon = () => {
+    if(props.seatDate === "add") {
+      return addIcon;
+    }
+    if(admin){
+      return freeIcon;
+    }
     if(props.isPermanent){
       return permanentIcon;
     }
@@ -270,8 +300,11 @@ const LeafletMarker = ({props, map}) => {
   }
 
   return (
-        <Marker position={props.position} icon={getIcon()}>
-        <Tooltip direction={tooltipDirection} permanent={props.tooltipPermanent && useSeatFlg}><b>{popupText}{props.isPermanent ? "":""}</b></Tooltip>
+        <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
+        <Tooltip direction={tooltipDirection} permanent={props.tooltipPermanent && (admin ||useSeatFlg)}><b>{admin?seatId:popupText}{props.isPermanent ? "":""}</b></Tooltip>
+          {admin
+            ? ""
+            :
           <Popup
             ref={(r) => {
               popupRef = r;
@@ -323,32 +356,13 @@ const LeafletMarker = ({props, map}) => {
           </Box>
           
           </Popup>
-          <Dialog
+          }
+          <LeafletDialog
             open={open}
-            onClose={handleClose}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-            PaperProps={{
-              style: {
-                maxWidth: '300px',
-                boxShadow: 'none',
-              },
-            }}
-          >
-            <DialogTitle id="alert-dialog-title">
-              {dialogTitleMessage}
-            </DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-              {dialogContentMessage}
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose} autoFocus>
-                OK
-              </Button>
-            </DialogActions>
-          </Dialog>
+            handleClose={handleClose}
+            dialogTitleMessage={dialogTitleMessage}
+            dialogContentMessage={dialogContentMessage}
+          />
         </Marker>
     )
 }

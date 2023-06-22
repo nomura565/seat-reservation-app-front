@@ -15,6 +15,8 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import axios from "axios";
+import { useSearchParams } from "react-router-dom";
+import { Button } from "@mui/material";
 
 Leaflet.Icon.Default.imagePath =
   '//cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/'
@@ -25,6 +27,9 @@ Leaflet.Icon.Default.imagePath =
     const [seatDate, setSeatDate] = useState(Today);
     const [floor, setFloor] = React.useState("1");
     let tmpFloorList = [];
+    const [searchParams, setSearchParams] = useSearchParams();
+    const paramAdmin = searchParams.get('admin');
+    const [admin, setAdmin] = useState((paramAdmin === null)? false:paramAdmin);
   
     const [floorList, setFloorList] = useState(tmpFloorList);
     //registerLocale('ja', ja);
@@ -70,6 +75,10 @@ Leaflet.Icon.Default.imagePath =
       return floor;
     }
 
+    const onClickButton = () => {
+      childRef.current.updateSeatLatLng();
+    }
+
     return (
       <div>
         <div className='date-container'>
@@ -104,6 +113,11 @@ Leaflet.Icon.Default.imagePath =
               onChange={selectedDate => {dateChange(selectedDate || Today)}}
             />
           </div>
+          {admin
+            ?
+            <Button className="edit-button" variant="outlined" onClick={onClickButton}>座席位置登録</Button>
+            :""
+          }
         </div>
         
         <LeafletMain
@@ -112,6 +126,7 @@ Leaflet.Icon.Default.imagePath =
           floor={floor}
           getSeatDate={getSeatDate}
           getFloor={getFloor}
+          admin={admin}
         />
       </div>
     );

@@ -77,3 +77,24 @@ code {
 .my-button-group {
   box-shadow: none !important;
 }
+
+.edit-button {
+  margin: 8px 0px 0px 0px !important;
+  height: 40px;
+  border: 2px solid #CCC !important;
+  background-color: #FFFFFF !important;
+  color: black !important;
+}
+
+@keyframes blinkOpacity {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.blinking {
+	animation: blinkOpacity 0.5s ease-in-out infinite alternate;
+}

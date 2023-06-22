@@ -8,6 +8,7 @@ export const API_URL = {
     SELECT: BASE_URL + "select",
     INSERT: BASE_URL + "insert",
     DELETE: BASE_URL + "delete",
+    UPDATE: BASE_URL + "update",
   }
 
 export const formatDate = (date) => {
