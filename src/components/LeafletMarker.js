@@ -16,6 +16,10 @@ import {API_URL} from "./Const";
 import LeafletDialog from "./LeafletDialog";
 
 import { useCookies } from "react-cookie";
+import Resizer from "react-image-file-resizer";
+import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
+import ChairAltIcon from '@mui/icons-material/ChairAlt';
+import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 
 const LeafletMarker = (props) => {
   const occupyIcon = new icon({
@@ -88,6 +92,11 @@ const LeafletMarker = (props) => {
   const [tooltipDirection, setTooltipDirection] = useState(tooltip_direction);
   const [position, setPosition] = useState(props.position);
   const [admin, setAdmin] = useState(props.admin);
+  const [imageData, setImageData] = useState(null);
+  const [lat, setLat] = useState(null);
+  const [lng, setLng] = useState(null);
+
+  const inputFileRef = useRef();
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -149,7 +158,8 @@ const LeafletMarker = (props) => {
         from_date: from_date,
         to_date: to_date,
         user_name: userName,
-        permanent_flg: permanentFlg
+        permanent_flg: permanentFlg,
+        image_data: imageData
       })
       .then((response) => {
         //console.log(response);
@@ -255,6 +265,19 @@ const LeafletMarker = (props) => {
     }
   }
 
+  //指定の座標に中心が移動する
+  const setViewCurrentLatlng = (_lat, _lng) => {
+    const latlng = {
+      "lat":_lat,
+      "lng":_lng
+    }
+    setLat(_lat);
+    setLng(_lng);
+    setTimeout(function(){
+      parentMap.setView(latlng, parentMap.getZoom());
+    }, 10);
+  }
+
   const mapEvents = useMapEvents({
     popupopen(e) {
       //console.log("popupopen");
@@ -262,10 +285,9 @@ const LeafletMarker = (props) => {
       let tmpDate = props.getSelectedDate();
       setFromDate(formatDate(tmpDate));
       setToDate(tmpDate);
-
-      setTimeout(function(){
-        parentMap.setView(e.popup._latlng, parentMap.getZoom());
-      }, 10);
+      setImageData(null);
+      //座席アイコンが押下された時に中央に移動する
+      setViewCurrentLatlng(e.popup._latlng.lat +20, e.popup._latlng.lng);
 
     },
     popupclose(e) {
@@ -298,6 +320,37 @@ const LeafletMarker = (props) => {
       return freeIcon;
     }
   }
+  const onFileChange = async(e) => {
+    const files = e.target.files
+    if (files.length > 0) {
+        const file = e.target.files[0];
+        const image = await resizeFile(file);
+        setImageData(image);
+        setViewCurrentLatlng(lat+100, lng);
+    } else {
+      setImageData(null);
+    }
+  }
+  const resizeFile = (file) => {
+    return new Promise((resolve) => {
+      Resizer.imageFileResizer(
+        file,
+        100,
+        100,
+        'JPEG',
+        100,
+        0,
+        (uri) => {
+          resolve(uri)
+        },
+        'base64'
+      )
+    })
+  }
+
+  const onClickfileUploadButton = () => {
+    inputFileRef.current.click();
+  }
 
   return (
         <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
@@ -318,6 +371,22 @@ const LeafletMarker = (props) => {
             noValidate
             autoComplete="off"
           >
+            <div className={useSeatFlg ? "unuse":""}>
+              <Button size="small" variant="contained" startIcon={<FaceRetouchingNaturalIcon />}
+              onClick={() => onClickfileUploadButton()}>アイコンアップロード</Button>
+              <div className="image">
+                <input type="file" accept="image/*" 
+                  hidden ref={inputFileRef}
+                  onChange={(e) => onFileChange(e)}
+                />
+                <div>
+                  <img src={imageData} />
+                </div>
+              </div>
+            </div>
+            <div className={useSeatFlg ? "image":"unuse"}>
+              <img src={props.image} />
+            </div>
             <div><TextField id="outlined-basic" name="userName" value={userName} onChange={userNameChange} label="名前" variant="standard" size="small" /></div>
             <div className={useSeatFlg ? "use-seat-date":"unuse-seat-date"}>
               <input
@@ -341,16 +410,16 @@ const LeafletMarker = (props) => {
               
             </div>
             <div className={useSeatFlg ? "unuse":""}>
-            <MaterialTooltip title="固定席の場合、他の席情報を強制的に削除します">
+            <MaterialTooltip placement="right" title="固定席の場合、他の席情報を強制的に削除します">
                 <FormControlLabel required control={<Checkbox onChange={handleChange} size="small" />} label="固定席にする" />
               </MaterialTooltip>
             </div>
             <div><ButtonGroup size="small" aria-label="small button group">
             <div className={useSeatFlg ? "unuse":""}>
-              <Button onClick={() => onClickButton(true)}>座席登録</Button>
+              <Button startIcon={<ChairAltIcon />} onClick={() => onClickButton(true)}>座席登録</Button>
             </div>
             <div className={useSeatFlg ? "":"unuse"}>
-            <Button onClick={() => onClickButton(false)}>{unUseSeatText}にする</Button>
+            <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickButton(false)}>{unUseSeatText}にする</Button>
             </div>
             </ButtonGroup></div>
           </Box>

@@ -275,6 +275,7 @@ const LeafletMain = (props, ref) => {
             setPositionForSeatList={setPositionForSeatList}
             iconClass={iconClass}
             markerDelete={markerDelete}
+            image={(seat.image_data !== null)? seat.image_data: null}
           />
         );
       })}

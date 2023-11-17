@@ -98,3 +98,9 @@ code {
 .blinking {
 	animation: blinkOpacity 0.5s ease-in-out infinite alternate;
 }
+
+.image {
+  display: flex;
+  justify-content: center;
+  margin-top: 5px;
+}
