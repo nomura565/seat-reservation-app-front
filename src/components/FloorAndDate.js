@@ -40,7 +40,8 @@ export default function FloorAndDate(props) {
         <Datetime
           locale='ja'
           inputProps={
-            {"className":"date-input2"}
+            {"className":"date-input2",
+              "readOnly":"readOnly"}
           }
           dateFormat={DATE_FORMAT}
           timeFormat={false}

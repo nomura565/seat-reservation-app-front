@@ -419,7 +419,7 @@ const LeafletMarker = (props) => {
               <Datetime
                 locale='ja'
                 inputProps={
-                  {"className":"date-input"}
+                  {"className":"date-input","readOnly":"readOnly"}
                 }
                 dateFormat={DATE_FORMAT}
                 timeFormat={false}
