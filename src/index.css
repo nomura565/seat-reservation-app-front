@@ -104,3 +104,11 @@ code {
   justify-content: center;
   margin-top: 5px;
 }
+
+.parent {
+  display: flex;
+}
+
+.leaflet-popup-close-button {
+  font-size: 24px !important;
+}

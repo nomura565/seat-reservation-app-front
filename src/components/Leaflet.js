@@ -11,6 +11,14 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { Button,ButtonGroup } from "@mui/material";
 import LeafletDialog from "./LeafletDialog";
 
+const MESSAGE = {
+  ADD: "追加",
+  DIALOG_FAIL_TITLE: "APIエラー",
+  DIALOG_FAIL_DETAIL: "登録に失敗しました。座席一覧を再読み込みします。",
+  DIALOG_SUCCESS_TITLE: "座席位置登録",
+  DIALOG_SUCCESS_DETAIL: "座席位置を登録しました。",
+}
+
 /*
 function LocationMarker() {
   const map = useMapEvents({
@@ -109,7 +117,7 @@ const LeafletMain = (props, ref) => {
     if(deleteMode) return;
     let temp = seatList;
     //let seat_id = Math.max(...temp.map(t => t.seat_id))+1;addSeatCount
-    let seat_id = "追加"+ addSeatCount;
+    let seat_id = MESSAGE.ADD + addSeatCount;
     //適当な座標に追加アイコン
     let addSeat = {
       key: seat_id + "_add",
@@ -175,11 +183,11 @@ const LeafletMain = (props, ref) => {
   }
   //登録失敗
   const InsertFail = () => {
-    dialogOpen("APIエラー", "登録に失敗しました。座席一覧を再読み込みします。");
+    dialogOpen(MESSAGE.DIALOG_FAIL_TITLE, MESSAGE.DIALOG_FAIL_DETAIL);
   }
   //登録成功
   const InsertSuccess = () => {
-    dialogOpen("座席位置登録", "座席位置を登録しました。");
+    dialogOpen(MESSAGE.DIALOG_SUCCESS_TITLE, MESSAGE.DIALOG_SUCCESS_DETAIL);
   }
   //席情報を更新
   const handleClickOpen = () => {

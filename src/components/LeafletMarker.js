@@ -1,25 +1,40 @@
 import { icon } from 'leaflet';
 import React, { useState,useRef  } from 'react'
 import { Marker, Popup,Tooltip,useMapEvents, useMap } from 'react-leaflet'
-
 import Box from '@mui/material/Box';
 import { TextField,Button,ButtonGroup,FormControlLabel,Checkbox,Tooltip as MaterialTooltip } from "@mui/material";
-
-import { formatDate} from "./Const";
-
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
-
 import axios from "axios";
-import {API_URL} from "./Const";
-
+import {API_URL, formatDate, DATE_FORMAT} from "./Const";
 import LeafletDialog from "./LeafletDialog";
-
 import { useCookies } from "react-cookie";
 import Resizer from "react-image-file-resizer";
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
 import ChairAltIcon from '@mui/icons-material/ChairAlt';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import { format } from 'react-string-format';
+
+const MESSAGE = {
+  UNSEAT: "空席",
+  DIALOG_SEAT_REGIST_TITLE: "座席登録",
+  DIALOG_SEAT_REGIST_DETAIL: "{0}さんを{1}～{2}で座席登録しました。",
+  DIALOG_PERMANENT_SEAT_REGIST_DETAIL: "{0}さんを固定席で座席登録しました。",
+  DIALOG_UNSEAT_REGIST_TITLE: "空席登録",
+  DIALOG_UNSEAT_REGIST_DETAIL: "{0}の座席を空席にしました。",
+  DIALOG_API_FAIL_TITLE: "APIエラー",
+  DIALOG_API_FAIL_DETAIL: "登録に失敗しました。座席一覧を再読み込みします。",
+  DIALOG_VALID_FAIL_TITLE: "バリデーションエラー",
+  DIALOG_VALID_FAIL_DETAIL_NAME_EMPTY: "名前が入力されていません。",
+  DIALOG_VALID_FAIL_DETAIL_DATE_TERM_ILLEGAL: "日付の期間が正しくありません。",
+  DIALOG_VALID_FAIL_DETAIL_DATE_ILLEGAL: "正しい日付が入力されていません。",
+  ICON_UPLOAD_BUTTON: "アイコンアップロード",
+  NAME: "名前",
+  PARMANENT_TOOLTIP_TITLE: "固定席の場合、他の席情報を強制的に削除します",
+  PARMANENT: "固定席にする",
+  SEAT_REGIST_BUTTON: "座席登録",
+  UNSEAT_REGIST_BUTTON: "空席にする",
+}
 
 const LeafletMarker = (props) => {
   //使用中アイコン
@@ -54,11 +69,7 @@ const LeafletMarker = (props) => {
   };
   
   let currentUpdateMode = UpdateMode.default;
-  const unUseSeatText = "空席";
-  const useSeatResultText = "座席登録";
-  const unUseSeatResultText = "空席登録";
-  const validationErrorResultText = "バリデーションエラー";
-  const APIErrorResultText = "APIエラー";
+
   //席が使用中かのフラグ
   let flg = true;
   //dialogで使う名前
@@ -71,7 +82,7 @@ const LeafletMarker = (props) => {
     //クッキーに名前があればそれをdialogで使う名前にする
     user_name = (cookies.userName !== 0) ? cookies.userName: "";
     flg = false;
-    name = unUseSeatText;
+    name = MESSAGE.UNSEAT;
   }
   const Today = new Date();
 
@@ -89,7 +100,7 @@ const LeafletMarker = (props) => {
 
   const [open, setOpen] = useState(false);
   //dialogのタイトルメッセージ
-  const [dialogTitleMessage, setDialogTitleMessage] = useState(useSeatResultText);
+  const [dialogTitleMessage, setDialogTitleMessage] = useState(MESSAGE.DIALOG_SEAT_REGIST_TITLE);
   //dialogのコンテントメッセージ
   const [dialogContentMessage, setDialogContentMessage] = useState("");
   //席情報等をリフレッシュするかのフラグ
@@ -137,7 +148,7 @@ const LeafletMarker = (props) => {
   //登録失敗
   const InsertFail = () => {
     setRefreshFlg(true);
-    dialogOpen(APIErrorResultText, "登録に失敗しました。座席一覧を再読み込みします。");
+    dialogOpen(MESSAGE.DIALOG_API_FAIL_TITLE, MESSAGE.DIALOG_API_FAIL_DETAIL);
   }
   //座席登録ボタン押下イベント
   const onClickButton = (argFlg) => {
@@ -147,7 +158,7 @@ const LeafletMarker = (props) => {
     if(argFlg){
       let temp = (userName === null)? "":userName;
       if(temp.trim() === ""){
-        dialogOpen(validationErrorResultText, "名前が入力されていません。");
+        dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_NAME_EMPTY);
         return;
       }
 
@@ -157,11 +168,11 @@ const LeafletMarker = (props) => {
         let tmpFDate = new Date(fromDate);
         let tmpTDate = new Date(to_date);
         if(tmpFDate.getTime() > tmpTDate.getTime()){
-          dialogOpen(validationErrorResultText, "日付の期間が正しくありません。");
+          dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_DATE_TERM_ILLEGAL);
           return;
         }
       }catch{
-        dialogOpen(validationErrorResultText, "正しい日付が入力されていません。");
+        dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_DATE_ILLEGAL);
         return;
       }
 
@@ -183,9 +194,9 @@ const LeafletMarker = (props) => {
           let tmpDate = props.getSelectedDate();
           setFromDate(formatDate(tmpDate));
           setToDate(tmpDate);
-          let text = userName + "さんを" + from_date + "～" + to_date + "で座席登録しました。";
-          if(permanentFlg) text = userName + "さんを固定席で座席登録しました。";
-          dialogOpen(useSeatResultText, text);
+          let text =  format(MESSAGE.DIALOG_SEAT_REGIST_DETAIL, userName, from_date, to_date);
+          if(permanentFlg) text = format(MESSAGE.DIALOG_PERMANENT_SEAT_REGIST_DETAIL, userName);
+          dialogOpen(MESSAGE.DIALOG_SEAT_REGIST_TITLE, text);
           setUseSeatFlg(argFlg);
           setRefreshFlg(true);
           const cookieDate = new Date();
@@ -219,12 +230,12 @@ const LeafletMarker = (props) => {
         if(response.status === 204){
           setUserName("");
           setDefaultUserName("");
-          setPopupText(unUseSeatText);
+          setPopupText(MESSAGE.UNSEAT);
           let tmpDate = props.getSelectedDate();
           setFromDate(formatDate(tmpDate));
           setToDate(tmpDate);
-          dialogOpen(unUseSeatResultText, 
-            from_date + "の座席を空席にしました。");
+          dialogOpen(MESSAGE.DIALOG_UNSEAT_REGIST_TITLE, 
+            format(MESSAGE.DIALOG_UNSEAT_REGIST_DETAIL, from_date));
           setUseSeatFlg(argFlg);
           setRefreshFlg(true);
         }else{
@@ -383,7 +394,7 @@ const LeafletMarker = (props) => {
           >
             <div className={useSeatFlg ? "unuse":""}>
               <Button size="small" variant="contained" startIcon={<FaceRetouchingNaturalIcon />}
-              onClick={() => onClickfileUploadButton()}>アイコンアップロード</Button>
+              onClick={() => onClickfileUploadButton()}>{MESSAGE.ICON_UPLOAD_BUTTON}</Button>
               <div className="image">
                 <input type="file" accept="image/*" 
                   hidden ref={inputFileRef}
@@ -397,7 +408,7 @@ const LeafletMarker = (props) => {
             <div className={useSeatFlg ? "image":"unuse"}>
               <img src={props.image} />
             </div>
-            <div><TextField id="outlined-basic" disabled={useSeatFlg} name="userName" value={userName} onChange={userNameChange} label="名前" variant="standard" size="small" /></div>
+            <div><TextField id="outlined-basic" disabled={useSeatFlg} name="userName" value={userName} onChange={userNameChange} label={MESSAGE.NAME} variant="standard" size="small" /></div>
             <div className={useSeatFlg ? "use-seat-date":"unuse-seat-date"}>
               <input
                 className="date-input"
@@ -410,7 +421,7 @@ const LeafletMarker = (props) => {
                 inputProps={
                   {"className":"date-input"}
                 }
-                dateFormat="YYYY/MM/DD"
+                dateFormat={DATE_FORMAT}
                 timeFormat={false}
                 value={toDate}
                 initialValue={toDate}
@@ -420,16 +431,16 @@ const LeafletMarker = (props) => {
               
             </div>
             <div className={useSeatFlg ? "unuse":""}>
-            <MaterialTooltip placement="right" title="固定席の場合、他の席情報を強制的に削除します">
-                <FormControlLabel required control={<Checkbox onChange={handleChange} size="small" />} label="固定席にする" />
+            <MaterialTooltip placement="right" title={MESSAGE.PARMANENT_TOOLTIP_TITLE}>
+                <FormControlLabel required control={<Checkbox onChange={handleChange} size="small" />} label={MESSAGE.PARMANENT} />
               </MaterialTooltip>
             </div>
             <div><ButtonGroup size="small" aria-label="small button group">
             <div className={useSeatFlg ? "unuse":""}>
-              <Button startIcon={<ChairAltIcon />} onClick={() => onClickButton(true)}>座席登録</Button>
+              <Button startIcon={<ChairAltIcon />} onClick={() => onClickButton(true)}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
             </div>
             <div className={useSeatFlg ? "":"unuse"}>
-            <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickButton(false)}>{unUseSeatText}にする</Button>
+            <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickButton(false)}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
             </div>
             </ButtonGroup></div>
           </Box>
