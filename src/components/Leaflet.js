@@ -74,11 +74,11 @@ const LeafletMain = (props, ref) => {
   //席一覧を取得する
   const getSeatList = (date, floor) => {
     setAddSeatCount(1);
-    let selectedDate = formatDate(date);
+    let _selectedDate = formatDate(date);
     setSeatDate(date);
     axios
       .post(API_URL.SELECT, {
-        seat_date: selectedDate,
+        seat_date: _selectedDate,
         floor_id: floor
       })
       .then((response) => {
@@ -115,13 +115,13 @@ const LeafletMain = (props, ref) => {
   const onClickAddButton = () => {
     //削除モードなら何もしない
     if(deleteMode) return;
-    let temp = seatList;
+    let _temp = seatList;
     //let seat_id = Math.max(...temp.map(t => t.seat_id))+1;addSeatCount
-    let seat_id = MESSAGE.ADD + addSeatCount;
+    let _seat_id = MESSAGE.ADD + addSeatCount;
     //適当な座標に追加アイコン
     let addSeat = {
-      key: seat_id + "_add",
-      seat_id: seat_id,
+      key: _seat_id + "_add",
+      seat_id: _seat_id,
       lat: 350,
       lng: 15,
       position: [350, 15],
@@ -130,29 +130,29 @@ const LeafletMain = (props, ref) => {
       seat_date: "add"
     }
     //配列の最後に追加
-    temp = [...seatList, addSeat];
+    _temp = [...seatList, addSeat];
     setAddSeatCount(addSeatCount+1);
-    setSeatList(temp);
+    setSeatList(_temp);
   }
   //席の位置座標セット　管理モードでドラッグが終了した時点の位置座標をセットする
   //LeafletMarker.jsから参照される
   const setPositionForSeatList = (seatId, lat, lng) => {
-    let temp = seatList;
-    temp.map((seat) => {
+    let _temp = seatList;
+    _temp.map((seat) => {
       if(seat.seat_id === seatId){
         seat.lat = lat;
         seat.lng = lng;
       }
     })
-    setSeatList(temp);
+    setSeatList(_temp);
   }
   //席削除
   const markerDelete = (seatId) => {
     if(deleteMode){
-      let temp;
+      let _temp;
       //配列から指摘の席を削除
-      temp = seatList.filter(t => t.seat_id !== seatId);
-      setSeatList(temp);
+      _temp = seatList.filter(t => t.seat_id !== seatId);
+      setSeatList(_temp);
     }
   }
 

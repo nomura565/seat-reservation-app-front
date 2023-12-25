@@ -1,12 +1,12 @@
 import { icon } from 'leaflet';
-import React, { useState,useRef  } from 'react'
-import { Marker, Popup,Tooltip,useMapEvents, useMap } from 'react-leaflet'
+import React, { useState, useRef } from 'react'
+import { Marker, Popup, Tooltip, useMapEvents, useMap } from 'react-leaflet'
 import Box from '@mui/material/Box';
-import { TextField,Button,ButtonGroup,FormControlLabel,Checkbox,Tooltip as MaterialTooltip } from "@mui/material";
+import { TextField, Button, ButtonGroup, FormControlLabel, Checkbox, Tooltip as MaterialTooltip } from "@mui/material";
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
-import {API_URL, formatDate, DATE_FORMAT} from "./Const";
+import { API_URL, formatDate, DATE_FORMAT } from "./Const";
 import LeafletDialog from "./LeafletDialog";
 import { useCookies } from "react-cookie";
 import Resizer from "react-image-file-resizer";
@@ -34,57 +34,59 @@ const MESSAGE = {
   PARMANENT: "固定席にする",
   SEAT_REGIST_BUTTON: "座席登録",
   UNSEAT_REGIST_BUTTON: "空席にする",
+  API_RESPONSE_UNEXPECT:"APIのレスポンスが正常以外です"
 }
 
 const LeafletMarker = (props) => {
   //使用中アイコン
   const occupyIcon = new icon({
     iconUrl: 'occupy.png',
-    iconSize:     [25, 25], // size of the icon
-    className:props.iconClass
+    iconSize: [25, 25], // size of the icon
+    className: props.iconClass
   });
   //固定席アイコン
   const permanentIcon = new icon({
     iconUrl: 'permanent.png',
-    iconSize:     [25, 25], // size of the icon
-    className:props.iconClass
+    iconSize: [25, 25], // size of the icon
+    className: props.iconClass
   });
   //追加席アイコン
   const addIcon = new icon({
     iconUrl: 'add.png',
-    iconSize:     [25, 25], // size of the icon
-    className:props.iconClass
+    iconSize: [25, 25], // size of the icon
+    className: props.iconClass
   });
   //自由席アイコン
   const freeIcon = new icon({
     iconUrl: 'free.png',
-    iconSize:     [14, 25], // size of the icon
-    className:props.iconClass
+    iconSize: [14, 25], // size of the icon
+    className: props.iconClass
   });
-  
+
   const UpdateMode = {
-    default : 1,
-    update : 2,
-    unseat : 3
+    default: 1,
+    update: 2,
+    unseat: 3
   };
-  
+
   let currentUpdateMode = UpdateMode.default;
 
   //席が使用中かのフラグ
   let flg = true;
   //dialogで使う名前
-  var name = props.userName;
+  let name = props.userName;
   //toolipで使う名前
-  var user_name = props.userName;
+  let user_name = props.userName;
   const [cookies, setCookie, removeCookie] = useCookies();
   //初期状態だとnullとなり表示にnullと出てしまうので対応
-  if(name == null){
+  if (name == null) {
     //クッキーに名前があればそれをdialogで使う名前にする
-    user_name = (cookies.userName !== 0) ? cookies.userName: "";
+    user_name = (cookies.userName !== 0) ? cookies.userName : "";
     flg = false;
     name = MESSAGE.UNSEAT;
   }
   const Today = new Date();
+  const unUseClassName = "unuse";
 
   const [userName, setUserName] = useState(user_name);
   const [fromDate, setFromDate] = useState(formatDate(Today));
@@ -109,7 +111,7 @@ const LeafletMarker = (props) => {
   const [permanentFlg, setPermanentFlg] = useState(false);
   //tooltipの表示向き　指摘がなければauto
   let tooltip_direction = props.tooltip_direction;
-  if(tooltip_direction == null){
+  if (tooltip_direction == null) {
     tooltip_direction = "auto";
   }
   const [tooltipDirection, setTooltipDirection] = useState(tooltip_direction);
@@ -130,12 +132,12 @@ const LeafletMarker = (props) => {
   //dialogクローズイベント
   const handleClose = () => {
     setOpen(false);
-    
-    if(refreshFlg){
+
+    if (refreshFlg) {
       props.getCurrentSeatList();
       setRefreshFlg(false);
     }
-    
+
   };
 
   let popupRef = useRef();
@@ -145,111 +147,124 @@ const LeafletMarker = (props) => {
     setDialogContentMessage(ContextText);
     handleClickOpen();
   }
+  //登録成功
+  const InsertSuccsess = (unseatFlg) => {
+    let _fromDate = fromDate;
+    let _toDate = formatDate(toDate);
+    let _userName = userName;
+    let _popupText = userName;
+    let _tmpDate = props.getSelectedDate();
+    let _title = MESSAGE.DIALOG_SEAT_REGIST_TITLE;
+    let _text = format(MESSAGE.DIALOG_SEAT_REGIST_DETAIL, userName, _fromDate, _toDate);
+    if (permanentFlg) _text = format(MESSAGE.DIALOG_PERMANENT_SEAT_REGIST_DETAIL, userName);
+    
+    if(unseatFlg){
+      _userName = "";
+      _popupText = MESSAGE.UNSEAT;
+      _title = MESSAGE.DIALOG_UNSEAT_REGIST_TITLE;
+      _text = format(MESSAGE.DIALOG_UNSEAT_REGIST_DETAIL, _fromDate);
+    }else{
+      const cookieDate = new Date();
+      cookieDate.setDate(cookieDate.getDate() + 7);
+      setCookie("userName", userName, { expires: cookieDate, path: '/' });
+    }
+
+    setUserName(_userName);
+    setDefaultUserName(_userName);
+    setPopupText(_popupText);
+    setFromDate(formatDate(_tmpDate));
+    setToDate(_tmpDate);
+    dialogOpen(_title, _text);
+    setUseSeatFlg(!unseatFlg);
+    setRefreshFlg(true);
+  }
   //登録失敗
-  const InsertFail = () => {
+  const InsertFail = (message) => {
+    console.log(message);
     setRefreshFlg(true);
     dialogOpen(MESSAGE.DIALOG_API_FAIL_TITLE, MESSAGE.DIALOG_API_FAIL_DETAIL);
   }
   //座席登録ボタン押下イベント
-  const onClickButton = (argFlg) => {
-    let from_date = fromDate;
-    let to_date;
-    //座席登録
-    if(argFlg){
-      let temp = (userName === null)? "":userName;
-      if(temp.trim() === ""){
-        dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_NAME_EMPTY);
+  const onClickSeatRegistButton = () => {
+    let _fromDate = fromDate;
+    let _toDate;
+
+    let _temp = (userName === null) ? "" : userName;
+    if (_temp.trim() === "") {
+      dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_NAME_EMPTY);
+      return;
+    }
+
+    try {
+      _toDate = formatDate(toDate);
+
+      let _tmpFDate = new Date(fromDate);
+      let _tmpTDate = new Date(_toDate);
+      if (_tmpFDate.getTime() > _tmpTDate.getTime()) {
+        dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_DATE_TERM_ILLEGAL);
         return;
       }
+    } catch(e) {
+      console.log( e.message );
+      dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_DATE_ILLEGAL);
+      return;
+    }
 
-      try {
-        to_date = formatDate(toDate);
-
-        let tmpFDate = new Date(fromDate);
-        let tmpTDate = new Date(to_date);
-        if(tmpFDate.getTime() > tmpTDate.getTime()){
-          dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_DATE_TERM_ILLEGAL);
-          return;
-        }
-      }catch{
-        dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_DATE_ILLEGAL);
-        return;
-      }
-
-      currentUpdateMode = UpdateMode.update;
-      axios
+    currentUpdateMode = UpdateMode.update;
+    axios
       .post(API_URL.INSERT, {
         seat_id: seatId,
-        from_date: from_date,
-        to_date: to_date,
+        from_date: _fromDate,
+        to_date: _toDate,
         user_name: userName,
         permanent_flg: permanentFlg,
         image_data: imageData
       })
       .then((response) => {
-        if(response.status === 200){
-          setUserName(userName);
-          setDefaultUserName(userName);
-          setPopupText(userName);
-          let tmpDate = props.getSelectedDate();
-          setFromDate(formatDate(tmpDate));
-          setToDate(tmpDate);
-          let text =  format(MESSAGE.DIALOG_SEAT_REGIST_DETAIL, userName, from_date, to_date);
-          if(permanentFlg) text = format(MESSAGE.DIALOG_PERMANENT_SEAT_REGIST_DETAIL, userName);
-          dialogOpen(MESSAGE.DIALOG_SEAT_REGIST_TITLE, text);
-          setUseSeatFlg(argFlg);
-          setRefreshFlg(true);
-          const cookieDate = new Date();
-          cookieDate.setDate(cookieDate.getDate() + 7);
-          setCookie("userName", userName, { expires: cookieDate, path: '/' });
-        }else{
-          InsertFail();
+        if (response.status === 200) {
+          InsertSuccsess(false);
+        } else {
+          InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
           return;
         }
-        
+
       })
-      .catch((response) => {
-        InsertFail();
+      .catch((error) => {
+        InsertFail(error.message);
         return;
       });
-    } else {
-      //空席登録
-      currentUpdateMode = UpdateMode.unseat;
+    props.map.closePopup();
+  }
 
-      let selectedDate = formatDate(props.getSelectedDate());
-      const sendData = {
-        seat_id: seatId,
-        seat_date: selectedDate
-      }
-      
-      axios
+
+  //座席空席登録ボタン押下イベント
+  const onClickUnSeatRegistButton = () => {
+    //空席登録
+    currentUpdateMode = UpdateMode.unseat;
+
+    let _selectedDate = formatDate(props.getSelectedDate());
+    const sendData = {
+      seat_id: seatId,
+      seat_date: _selectedDate
+    }
+
+    axios
       .delete(API_URL.DELETE, {
         data: sendData
       })
       .then((response) => {
-        if(response.status === 204){
-          setUserName("");
-          setDefaultUserName("");
-          setPopupText(MESSAGE.UNSEAT);
-          let tmpDate = props.getSelectedDate();
-          setFromDate(formatDate(tmpDate));
-          setToDate(tmpDate);
-          dialogOpen(MESSAGE.DIALOG_UNSEAT_REGIST_TITLE, 
-            format(MESSAGE.DIALOG_UNSEAT_REGIST_DETAIL, from_date));
-          setUseSeatFlg(argFlg);
-          setRefreshFlg(true);
-        }else{
-          InsertFail();
+        if (response.status === 204) {
+          InsertSuccsess(true);
+        } else {
+          InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
           return;
         }
-        
-      })
-      .catch((response) => {
-        InsertFail();
-        return;
-      });;
 
-    }
+      })
+      .catch((error) => {
+        InsertFail(error.message);
+        return;
+      });
     props.map.closePopup();
   };
   const userNameChange = (e) => {
@@ -282,7 +297,7 @@ const LeafletMarker = (props) => {
       props.setPositionForSeatList(seatId, AfterPosition.lat, AfterPosition.lng);
     },
     //席クリック　削除するかはmarkerDeleteで判定
-    click:() => {
+    click: () => {
       props.markerDelete(seatId);
     }
   }
@@ -290,12 +305,12 @@ const LeafletMarker = (props) => {
   //指定の座標に中心が移動する
   const setViewCurrentLatlng = (_lat, _lng) => {
     const latlng = {
-      "lat":_lat,
-      "lng":_lng
+      "lat": _lat,
+      "lng": _lng
     }
     setLat(_lat);
     setLng(_lng);
-    setTimeout(function(){
+    setTimeout(function () {
       parentMap.setView(latlng, parentMap.getZoom());
     }, 10);
   }
@@ -303,50 +318,50 @@ const LeafletMarker = (props) => {
   const mapEvents = useMapEvents({
     popupopen(e) {
       currentUpdateMode = UpdateMode.default;
-      let tmpDate = props.getSelectedDate();
-      setFromDate(formatDate(tmpDate));
-      setToDate(tmpDate);
+      let _tmpDate = props.getSelectedDate();
+      setFromDate(formatDate(_tmpDate));
+      setToDate(_tmpDate);
       setImageData(null);
       //座席アイコンが押下された時に中央に移動する
-      setViewCurrentLatlng(e.popup._latlng.lat +20, e.popup._latlng.lng);
+      setViewCurrentLatlng(e.popup._latlng.lat + 20, e.popup._latlng.lng);
 
     },
     popupclose(e) {
-      if(currentUpdateMode === UpdateMode.default){
+      if (currentUpdateMode === UpdateMode.default) {
         setUserName(defaultUserName);
         let tmpDate = props.getSelectedDate();
         setFromDate(formatDate(tmpDate));
         setToDate(tmpDate);
-      }else{
+      } else {
         currentUpdateMode = UpdateMode.default;
       }
     }
   })
 
   const getIcon = () => {
-    if(props.seatDate === "add") {
+    if (props.seatDate === "add") {
       return addIcon;
     }
-    if(admin){
+    if (admin) {
       return freeIcon;
     }
-    if(props.isPermanent){
+    if (props.isPermanent) {
       return permanentIcon;
     }
-    if(useSeatFlg){
+    if (useSeatFlg) {
       return occupyIcon;
-    }else{
+    } else {
       return freeIcon;
     }
   }
   //アイコンのファイル選択時イベント
-  const onFileChange = async(e) => {
+  const onFileChange = async (e) => {
     const files = e.target.files
     if (files.length > 0) {
-        const file = e.target.files[0];
-        const image = await resizeFile(file);
-        setImageData(image);
-        setViewCurrentLatlng(lat+100, lng);
+      const file = e.target.files[0];
+      const image = await resizeFile(file);
+      setImageData(image);
+      setViewCurrentLatlng(lat + 100, lng);
     } else {
       setImageData(null);
     }
@@ -374,16 +389,16 @@ const LeafletMarker = (props) => {
   }
 
   return (
-        <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
-        <Tooltip direction={tooltipDirection} permanent={props.tooltipPermanent && (admin ||useSeatFlg)}><b>{admin?seatId:popupText}{props.isPermanent ? "":""}</b></Tooltip>
-          {admin
-            ? ""
-            :
-          <Popup
-            ref={(r) => {
-              popupRef = r;
-            }}
-          >
+    <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
+      <Tooltip direction={tooltipDirection} permanent={props.tooltipPermanent && (admin || useSeatFlg)}><b>{admin ? seatId : popupText}{props.isPermanent ? "" : ""}</b></Tooltip>
+      {admin
+        ? ""
+        :
+        <Popup
+          ref={(r) => {
+            popupRef = r;
+          }}
+        >
           <Box
             component="form"
             sx={{
@@ -392,11 +407,11 @@ const LeafletMarker = (props) => {
             noValidate
             autoComplete="off"
           >
-            <div className={useSeatFlg ? "unuse":""}>
+            <div className={useSeatFlg ? unUseClassName : ""}>
               <Button size="small" variant="contained" startIcon={<FaceRetouchingNaturalIcon />}
-              onClick={() => onClickfileUploadButton()}>{MESSAGE.ICON_UPLOAD_BUTTON}</Button>
+                onClick={() => onClickfileUploadButton()}>{MESSAGE.ICON_UPLOAD_BUTTON}</Button>
               <div className="image">
-                <input type="file" accept="image/*" 
+                <input type="file" accept="image/*"
                   hidden ref={inputFileRef}
                   onChange={(e) => onFileChange(e)}
                 />
@@ -405,11 +420,11 @@ const LeafletMarker = (props) => {
                 </div>
               </div>
             </div>
-            <div className={useSeatFlg ? "image":"unuse"}>
+            <div className={useSeatFlg ? "image" : unUseClassName}>
               <img src={props.image} />
             </div>
             <div><TextField id="outlined-basic" disabled={useSeatFlg} name="userName" value={userName} onChange={userNameChange} label={MESSAGE.NAME} variant="standard" size="small" /></div>
-            <div className={useSeatFlg ? "use-seat-date":"unuse-seat-date"}>
+            <div className={useSeatFlg ? "use-seat-date" : "unuse-seat-date"}>
               <input
                 className="date-input"
                 value={fromDate}
@@ -419,42 +434,42 @@ const LeafletMarker = (props) => {
               <Datetime
                 locale='ja'
                 inputProps={
-                  {"className":"date-input","readOnly":"readOnly"}
+                  { "className": "date-input", "readOnly": "readOnly" }
                 }
                 dateFormat={DATE_FORMAT}
                 timeFormat={false}
                 value={toDate}
                 initialValue={toDate}
                 closeOnSelect={true}
-                onChange={(selectedDate) => {toDateChange((selectedDate || Today))}}
+                onChange={(selectedDate) => { toDateChange((selectedDate || Today)) }}
               />
-              
+
             </div>
-            <div className={useSeatFlg ? "unuse":""}>
-            <MaterialTooltip placement="right" title={MESSAGE.PARMANENT_TOOLTIP_TITLE}>
+            <div className={useSeatFlg ? unUseClassName : ""}>
+              <MaterialTooltip placement="right" title={MESSAGE.PARMANENT_TOOLTIP_TITLE}>
                 <FormControlLabel required control={<Checkbox onChange={handleChange} size="small" />} label={MESSAGE.PARMANENT} />
               </MaterialTooltip>
             </div>
             <div><ButtonGroup size="small" aria-label="small button group">
-            <div className={useSeatFlg ? "unuse":""}>
-              <Button startIcon={<ChairAltIcon />} onClick={() => onClickButton(true)}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
-            </div>
-            <div className={useSeatFlg ? "":"unuse"}>
-            <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickButton(false)}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
-            </div>
+              <div className={useSeatFlg ? unUseClassName : ""}>
+                <Button startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
+              </div>
+              <div className={useSeatFlg ? "" : unUseClassName}>
+                <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
+              </div>
             </ButtonGroup></div>
           </Box>
-          
-          </Popup>
-          }
-          <LeafletDialog
-            open={open}
-            handleClose={handleClose}
-            dialogTitleMessage={dialogTitleMessage}
-            dialogContentMessage={dialogContentMessage}
-          />
-        </Marker>
-    )
+
+        </Popup>
+      }
+      <LeafletDialog
+        open={open}
+        handleClose={handleClose}
+        dialogTitleMessage={dialogTitleMessage}
+        dialogContentMessage={dialogContentMessage}
+      />
+    </Marker>
+  )
 }
 
 export default LeafletMarker;
