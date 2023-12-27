@@ -22,14 +22,21 @@ seat-reservation-app-front/
 ├ README.md                    説明ファイル
 ├ package.json                 利用する npm パッケージなどの情報
 ├ public/                      公開フォルダ
+│ │ ├ add.png                  追加座席アイコン
+│ │ ├ free.png                 座席空席アイコン
 │ │ ├ occupy.png               座席使用中アイコン
-│ │ ├ occupy.png               座席空席アイコン
+│ │ ├ permanent.png            固定席アイコン
 │ │ ├ office.png               オフィス背景画像
 ├ src/                         ソースフォルダ
 │ │ ├ components               座席使用中アイコン
 │ │ │ ├ Const.js               定数
+│ │ │ ├ FloorAndDate.js        フロア（オフィス）と日付選択コンポーネント
+│ │ │ ├ FormatDate.js          日付フォーマット関連
 │ │ │ ├ Leaflet.js             Leaflet
+│ │ │ ├ LeafletDialog.js       メッセージ表示用ダイアログコンポーネント
 │ │ │ ├ LeafletMarker.js       LeafletMarker（座席オブジェクト）
+│ │ │ ├ SeatCalendar.js        カレンダーコンポーネント
+│ │ │ ├ TemporaryDrawer.js     スマホ用メニューコンポーネント
 │ │ │ ├ App.css                基本CSS
 │ │ │ ├ App.js                 エントリポイント
 │ │ │ ├ index.css              追加CSS
@@ -49,4 +56,4 @@ seat-reservation-app-front/
 - ~~座席の追加（DBから直接変更のみ）~~　↓を追加
 - http://localhost:3000/?admin=trueにアクセスすると座席位置更新モードになるのでそこから更新する
 - オフィスの追加（DBから直接変更のみ）
-- 期間指定の座席の削除（DBから直接変更のみ）
+- ~~期間指定の座席の削除（DBから直接変更のみ）~~
