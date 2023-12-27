@@ -3,20 +3,23 @@ import React, { useState,useImperativeHandle,forwardRef,useEffect  } from 'react
 import { MapContainer, TileLayer, ImageOverlay,useMapEvents, useMap } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import {API_URL, formatDate} from "./Const";
+import {API_URL} from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { Button,ButtonGroup } from "@mui/material";
 import LeafletDialog from "./LeafletDialog";
+import {formatDateToString} from "./FormatDate";
 
+/** メッセージ */
 const MESSAGE = {
   ADD: "追加",
   DIALOG_FAIL_TITLE: "APIエラー",
   DIALOG_FAIL_DETAIL: "登録に失敗しました。座席一覧を再読み込みします。",
   DIALOG_SUCCESS_TITLE: "座席位置登録",
   DIALOG_SUCCESS_DETAIL: "座席位置を登録しました。",
+  API_RESPONSE_UNEXPECT:"APIのレスポンスが正常以外です",
 }
 
 /*
@@ -61,20 +64,20 @@ const LeafletMain = (props, ref) => {
   //追加した席のカウント　管理モードで席追加ボタンを押下で+1
   const [addSeatCount, setAddSeatCount] = useState(1);
 
-  //席日付の取得　LeafletMarker.jsからの参照用
+  /** 席日付の取得　LeafletMarker.jsからの参照用 */
   const getselectedDate = () => {
     return seatDate;
   }
 
-  //現在のセレクトボックスの値から席一覧を取得する　LeafletMarker.jsからも参照
+  /** 現在のセレクトボックスの値から席一覧を取得する　LeafletMarker.jsからも参照 */
   const getCurrentSeatList = () => {
     return getSeatList(props.getSeatDate(), props.getFloor());
   }
 
-  //席一覧を取得する
+  /** 席一覧を取得する */
   const getSeatList = (date, floor) => {
     setAddSeatCount(1);
-    let _selectedDate = formatDate(date);
+    let _selectedDate = formatDateToString(date);
     setSeatDate(date);
     axios
       .post(API_URL.SELECT, {
@@ -88,19 +91,19 @@ const LeafletMain = (props, ref) => {
         onClickMyLocationButton();
       });
   }
-  //センター位置ボタンクリックイベント　leafletをセンター位置、ズーム0に戻す
+  /** センター位置ボタンクリックイベント　leafletをセンター位置、ズーム0に戻す */
   const onClickMyLocationButton = () => {
     if(map !== undefined){
       map.setView(centerLatLng, 0);
     }
   }
-  //席のみ表示ボタンクリックイベント　tooltip表示を消して席のみ表示する
+  /** 席のみ表示ボタンクリックイベント　tooltip表示を消して席のみ表示する */
   const onClickMyBadgeButton = () => {
     setTooltipPermanent(!tooltipPermanent);
     setSeatList([]);
     getCurrentSeatList();
   }
-  //席削除ボタンクリックイベント　席アイコンを点滅状態にする
+  /** 席削除ボタンクリックイベント　席アイコンを点滅状態にする */
   const onClickDeleteButton = () => {
     //削除モードでなければ点滅
     if(!deleteMode){
@@ -111,7 +114,7 @@ const LeafletMain = (props, ref) => {
     //削除モード開始or終了
     setDeleteMode(!deleteMode);
   }
-  //席追加ボタンクリックイベント　追加アイコンを表示する
+  /** 席追加ボタンクリックイベント　追加アイコンを表示する */
   const onClickAddButton = () => {
     //削除モードなら何もしない
     if(deleteMode) return;
@@ -134,8 +137,9 @@ const LeafletMain = (props, ref) => {
     setAddSeatCount(addSeatCount+1);
     setSeatList(_temp);
   }
-  //席の位置座標セット　管理モードでドラッグが終了した時点の位置座標をセットする
-  //LeafletMarker.jsから参照される
+  /** 席の位置座標セット　管理モードでドラッグが終了した時点の位置座標をセットする
+   *  LeafletMarker.jsから参照される
+   */
   const setPositionForSeatList = (seatId, lat, lng) => {
     let _temp = seatList;
     _temp.map((seat) => {
@@ -146,7 +150,7 @@ const LeafletMain = (props, ref) => {
     })
     setSeatList(_temp);
   }
-  //席削除
+  /** 席削除 */
   const markerDelete = (seatId) => {
     if(deleteMode){
       let _temp;
@@ -155,41 +159,43 @@ const LeafletMain = (props, ref) => {
       setSeatList(_temp);
     }
   }
-
+  //読み込み時の処理
   useEffect(() =>{
       getSeatList(props.seatDate, props.floor);
   },[props.seatDate, props.floor])
-
+  //呼び出し元からの参照
   useImperativeHandle(ref, () => ({
-    //App.jsで席日付が変更されたときに呼ばれる　席一覧を取得する
+    /** App.jsで席日付が変更されたときに呼ばれる　席一覧を取得する */
     changeSeatList: (date, floor) => {
       getSeatList(date, floor);
     },
-    //App.jsでオフィスが変更されたときに呼ばれる　選択されたオフィス画像をセットする
+    /** App.jsでオフィスが変更されたときに呼ばれる　選択されたオフィス画像をセットする */
     setFloorMapFromParent: (floor_map) => {
       setFloorMap(floor_map);
     },
-    //App.jsで座席位置登録が押下されたときに呼ばれる　席情報を更新する
+    /** App.jsで座席位置登録が押下されたときに呼ばれる　席情報を更新する */
     updateSeatLatLng: () => {
       handleClickOpen();
     }
   }))
   //dialogオープンイベント
+  /** App.jsで座席位置登録が押下されたときに呼ばれる　席情報を更新する */
   const dialogOpen = (titleText, ContextText) => {
     setDialogTitleMessage(titleText);
     setDialogContentMessage(ContextText);
     setRefreshFlg(true);
     setOpen(true);
   }
-  //登録失敗
-  const InsertFail = () => {
+  /** 登録失敗 */
+  const InsertFail = (message) => {
+    console.log(message);
     dialogOpen(MESSAGE.DIALOG_FAIL_TITLE, MESSAGE.DIALOG_FAIL_DETAIL);
   }
-  //登録成功
+  /** 登録成功 */
   const InsertSuccess = () => {
     dialogOpen(MESSAGE.DIALOG_SUCCESS_TITLE, MESSAGE.DIALOG_SUCCESS_DETAIL);
   }
-  //席情報を更新
+  /** 席情報を更新 */
   const handleClickOpen = () => {
     axios
       .post(API_URL.UPDATE, {
@@ -200,17 +206,17 @@ const LeafletMain = (props, ref) => {
         if(response.status === 200){
           InsertSuccess();
         }else{
-          InsertFail();
+          InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
           return;
         }
         
       })
-      .catch((response) => {
-        InsertFail();
+      .catch((error) => {
+        InsertFail(error.message);
         return;
       });
   };
-  //dialogクローズイベント
+  /**dialogクローズイベント */
   const handleClose = () => {
     setOpen(false);
 

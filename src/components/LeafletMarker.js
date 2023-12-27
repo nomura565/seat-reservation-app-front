@@ -1,12 +1,12 @@
 import { icon } from 'leaflet';
-import React, { useState, useRef } from 'react'
-import { Marker, Popup, Tooltip, useMapEvents, useMap } from 'react-leaflet'
+import React, { useState, useRef } from 'react';
+import { Marker, Popup, Tooltip, useMapEvents, useMap } from 'react-leaflet';
 import Box from '@mui/material/Box';
 import { TextField, Button, ButtonGroup, FormControlLabel, Checkbox, Tooltip as MaterialTooltip } from "@mui/material";
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
-import { API_URL, formatDate, DATE_FORMAT } from "./Const";
+import { API_URL, DATE_FORMAT } from "./Const";
 import LeafletDialog from "./LeafletDialog";
 import { useCookies } from "react-cookie";
 import Resizer from "react-image-file-resizer";
@@ -14,7 +14,11 @@ import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural
 import ChairAltIcon from '@mui/icons-material/ChairAlt';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import { format } from 'react-string-format';
+import SeatCalendar from './SeatCalendar';
+import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
+import {formatDateToString} from "./FormatDate";
 
+/** メッセージ */
 const MESSAGE = {
   UNSEAT: "空席",
   DIALOG_SEAT_REGIST_TITLE: "座席登録",
@@ -36,6 +40,7 @@ const MESSAGE = {
   UNSEAT_REGIST_BUTTON: "空席にする",
   API_RESPONSE_UNEXPECT:"APIのレスポンスが正常以外です",
   UNSEAT_TOOLTIP_TITLE: "複数日が選択されている場合、指定範囲の同じ名前の席を空席にします",
+  SEAT_SCHEDULE_BUTTON:"この席の予定を確認する"
 }
 
 const LeafletMarker = (props) => {
@@ -64,6 +69,7 @@ const LeafletMarker = (props) => {
     className: props.iconClass
   });
 
+  /** 更新モード */
   const UpdateMode = {
     default: 1,
     update: 2,
@@ -90,7 +96,7 @@ const LeafletMarker = (props) => {
   const unUseClassName = "unuse";
 
   const [userName, setUserName] = useState(user_name);
-  const [fromDate, setFromDate] = useState(formatDate(Today));
+  const [fromDate, setFromDate] = useState(formatDateToString(Today));
   const [toDate, setToDate] = useState(Today);
   //dialogで使う名前　入力して登録せず閉じたときに元に戻す用
   const [defaultUserName, setDefaultUserName] = useState(user_name);
@@ -124,13 +130,16 @@ const LeafletMarker = (props) => {
   const [imageData, setImageData] = useState(null);
   const [lat, setLat] = useState(null);
   const [lng, setLng] = useState(null);
+  //カレンダーオープンフラグ
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const inputFileRef = useRef();
+  const seatCalendarRef = useRef();
 
   const handleClickOpen = () => {
     setOpen(true);
   };
-  //dialogクローズイベント
+  /**dialogクローズイベント */
   const handleClose = () => {
     setOpen(false);
 
@@ -142,16 +151,16 @@ const LeafletMarker = (props) => {
   };
 
   let popupRef = useRef();
-  //dialogオープンイベント
+  /**dialogオープンイベント */
   const dialogOpen = (titleText, ContextText) => {
     setDialogTitleMessage(titleText);
     setDialogContentMessage(ContextText);
     handleClickOpen();
   }
-  //登録成功
+  /**登録成功 */
   const InsertSuccsess = (unseatFlg) => {
     let _fromDate = fromDate;
-    let _toDate = formatDate(toDate);
+    let _toDate = formatDateToString(toDate);
     let _userName = userName;
     let _popupText = userName;
     let _tmpDate = props.getSelectedDate();
@@ -173,19 +182,19 @@ const LeafletMarker = (props) => {
     setUserName(_userName);
     setDefaultUserName(_userName);
     setPopupText(_popupText);
-    setFromDate(formatDate(_tmpDate));
+    setFromDate(formatDateToString(_tmpDate));
     setToDate(_tmpDate);
     dialogOpen(_title, _text);
     setUseSeatFlg(!unseatFlg);
     setRefreshFlg(true);
   }
-  //登録失敗
+  /**登録失敗 */
   const InsertFail = (message) => {
     console.log(message);
     setRefreshFlg(true);
     dialogOpen(MESSAGE.DIALOG_API_FAIL_TITLE, MESSAGE.DIALOG_API_FAIL_DETAIL);
   }
-  //座席登録ボタン押下イベント
+  /**座席登録ボタン押下イベント */
   const onClickSeatRegistButton = () => {
     let _fromDate = fromDate;
     let _toDate = formatToDateAndValidDate();
@@ -223,13 +232,13 @@ const LeafletMarker = (props) => {
       });
     props.map.closePopup();
   }
-  //日付バリデーション
+  /**日付バリデーション */
   const formatToDateAndValidDate = () => {
     let _fromDate = fromDate;
     let _toDate;
 
     try {
-      _toDate = formatDate(toDate);
+      _toDate = formatDateToString(toDate);
 
       let _tmpFDate = new Date(_fromDate);
       let _tmpTDate = new Date(_toDate);
@@ -245,12 +254,12 @@ const LeafletMarker = (props) => {
     return _toDate;
   }
 
-  //座席空席登録ボタン押下イベント
+  /**座席空席登録ボタン押下イベント */
   const onClickUnSeatRegistButton = () => {
     //空席登録
     currentUpdateMode = UpdateMode.unseat;
 
-    let _selectedDate = formatDate(props.getSelectedDate());
+    let _selectedDate = formatDateToString(props.getSelectedDate());
     let _toDate = formatToDateAndValidDate();
 
     if(_toDate == null) return;
@@ -316,7 +325,7 @@ const LeafletMarker = (props) => {
     }
   }
 
-  //指定の座標に中心が移動する
+  /**指定の座標に中心が移動する */
   const setViewCurrentLatlng = (_lat, _lng) => {
     const latlng = {
       "lat": _lat,
@@ -333,7 +342,7 @@ const LeafletMarker = (props) => {
     popupopen(e) {
       currentUpdateMode = UpdateMode.default;
       let _tmpDate = props.getSelectedDate();
-      setFromDate(formatDate(_tmpDate));
+      setFromDate(formatDateToString(_tmpDate));
       setToDate(_tmpDate);
       setImageData(null);
       //座席アイコンが押下された時に中央に移動する
@@ -344,7 +353,7 @@ const LeafletMarker = (props) => {
       if (currentUpdateMode === UpdateMode.default) {
         setUserName(defaultUserName);
         let tmpDate = props.getSelectedDate();
-        setFromDate(formatDate(tmpDate));
+        setFromDate(formatDateToString(tmpDate));
         setToDate(tmpDate);
       } else {
         currentUpdateMode = UpdateMode.default;
@@ -368,7 +377,7 @@ const LeafletMarker = (props) => {
       return freeIcon;
     }
   }
-  //アイコンのファイル選択時イベント
+  /**アイコンのファイル選択時イベント */
   const onFileChange = async (e) => {
     const files = e.target.files
     if (files.length > 0) {
@@ -380,7 +389,7 @@ const LeafletMarker = (props) => {
       setImageData(null);
     }
   }
-  //リサイズ処理
+  /**リサイズ処理 */
   const resizeFile = (file) => {
     return new Promise((resolve) => {
       Resizer.imageFileResizer(
@@ -400,6 +409,15 @@ const LeafletMarker = (props) => {
 
   const onClickfileUploadButton = () => {
     inputFileRef.current.click();
+  }
+  /**カレンダーオープンボタン */
+  const onClickCalendarButton = () => {
+    setCalendarOpen(true);
+    seatCalendarRef.current.onClickCalendarButton(seatId, fromDate);
+  }
+  /**カレンダークローズボタン */
+  const calendarClose = () => {
+    setCalendarOpen(false);
   }
 
   return (
@@ -473,9 +491,19 @@ const LeafletMarker = (props) => {
                   <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
                 </MaterialTooltip>
               </div>
-            </ButtonGroup></div>
+            </ButtonGroup>
+            {!props.isPermanent
+              ?
+              <MaterialTooltip placement="right" title={MESSAGE.SEAT_SCHEDULE_BUTTON}>
+                <Button onClick={onClickCalendarButton}>
+                  <CalendarMonthTwoToneIcon />
+                </Button>
+                </MaterialTooltip>
+              :
+              ""
+            }
+            </div>
           </Box>
-
         </Popup>
       }
       <LeafletDialog
@@ -483,6 +511,13 @@ const LeafletMarker = (props) => {
         handleClose={handleClose}
         dialogTitleMessage={dialogTitleMessage}
         dialogContentMessage={dialogContentMessage}
+      />
+      <SeatCalendar 
+        ref={seatCalendarRef}
+        open={calendarOpen}
+        handleClose={calendarClose}
+        seatId={seatId}
+        fromDate={fromDate}
       />
     </Marker>
   )

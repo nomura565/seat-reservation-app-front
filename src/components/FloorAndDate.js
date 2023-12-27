@@ -15,7 +15,7 @@ const MESSAGE = {
   FLOOR: "Floor"
 }
 
-export default function FloorAndDate(props) {
+const FloorAndDate = (props) => {
   const Today = new Date();
   return (
     <div className={isMobile ? "":"date-container"}>
@@ -54,3 +54,5 @@ export default function FloorAndDate(props) {
     </div>
   );
 }
+
+export default FloorAndDate;

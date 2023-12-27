@@ -7,7 +7,7 @@ import FloorAndDate from './FloorAndDate';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 
-export default function TemporaryDrawer(props) {
+const TemporaryDrawer = (props) => {
   const [state, setState] = React.useState({
     top: false,
     left: false,
@@ -15,6 +15,7 @@ export default function TemporaryDrawer(props) {
     right: false,
   });
 
+  /** メニューの開閉 */
   const toggleDrawer = (anchor, open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
@@ -68,3 +69,5 @@ export default function TemporaryDrawer(props) {
     </div>
   );
 }
+
+export default TemporaryDrawer;
