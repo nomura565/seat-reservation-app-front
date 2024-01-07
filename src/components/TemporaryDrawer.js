@@ -39,9 +39,6 @@ const TemporaryDrawer = (props) => {
         seatDate={props.seatDate}
         dateChange={props.dateChange}
       />
-      <div>
-        <a className="MuiTypography-root MuiTypography-inherit MuiLink-root MuiLink-underlineAlways css-10t6qxf" href="https://nscbgrn.cosmoroot.co.jp/script/cbgrn/grn.cgi/bulletin/draft_view?aid=41" target="_blank">座席予約管理システム運用方法</a>
-      </div>
       </List>
     </Box>
   );
