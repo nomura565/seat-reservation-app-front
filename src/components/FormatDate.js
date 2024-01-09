@@ -59,3 +59,10 @@ export const addHourStringDateToDate = (stringDate, addHour) => {
   dt.setHours(dt.getHours() + addHour);
   return dt;
 }
+
+/** 文字列→月を加算したyyyy/MM/ddのDateに変換する */
+export const addMonthStringDateToDate = (stringDate, addMonth) => {
+  let dt = parseStringToDate(stringDate);
+  dt.setMonth(dt.getMonth() + addMonth);
+  return dt;
+}

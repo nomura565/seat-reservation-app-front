@@ -6,7 +6,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import { Button } from "@mui/material";
 import { API_URL } from "./Const";
 import axios from "axios";
-import { formatDateToString, parseStringToDate, formatDateToYM, addDayStringDateToString, addHourStringDateToDate } from "./FormatDate";
+import { formatDateToString, parseStringToDate, formatDateToYM, addDayStringDateToString, addHourStringDateToDate, addMonthStringDateToDate } from "./FormatDate";
 
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -52,6 +52,9 @@ const SeatCalendar = (props, ref) => {
     setCalendarList([]);
 
     const _dateYm = formatDateToYM(_fromDate);
+    const _dateYmd = _dateYm+"/01";
+    const _dateYmNext = formatDateToYM(addMonthStringDateToDate(_dateYmd, 1));
+    const _dateYmPrev = formatDateToYM(addMonthStringDateToDate(_dateYmd, -1));
     setSeatId(_seatId);
     currentDateYm = _dateYm;
     setDateYmd(parseStringToDate(_fromDate));
@@ -59,7 +62,9 @@ const SeatCalendar = (props, ref) => {
     axios
       .post(API_URL.CALENDAR, {
         seat_id: _seatId,
-        date_ym: _dateYm
+        date_ym: _dateYm,
+        date_ym_next: _dateYmNext,
+        date_ym_prev: _dateYmPrev
       })
       .then((response) => {
         makeCalendarList(response.data);

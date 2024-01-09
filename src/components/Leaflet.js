@@ -76,6 +76,9 @@ const LeafletMain = (props, ref) => {
 
   /** 席一覧を取得する */
   const getSeatList = (date, floor) => {
+    if(map !== undefined){
+      map.closePopup();
+    }
     setAddSeatCount(1);
     let _selectedDate = formatDateToString(date);
     setSeatDate(date);
