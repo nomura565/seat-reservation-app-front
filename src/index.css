@@ -109,6 +109,14 @@ code {
   display: flex;
 }
 
-.leaflet-popup-close-button {
-  font-size: 24px !important;
+.calendar-button {
+  margin-left: 25px !important;
+}
+/* 隣接するカレンダ予定の偶数番目を違う色にする */
+.rbc-row-segment:has(.rbc-event):nth-of-type(2n) .rbc-event {
+  background-color: #5784ab !important;
+}
+
+.rbc-event-content {
+  font-size: 0.8rem;
 }

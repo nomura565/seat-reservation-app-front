@@ -4,7 +4,7 @@ import './App.css';
 import 'leaflet/dist/leaflet.css';
 import LeafletMain from './components/Leaflet';
 import { API_URL } from "./components/Const";
-import { formatDateToString } from "./components/FormatDate";
+import { formatDateToString, parseStringToDate } from "./components/FormatDate";
 
 import "react-datetime/css/react-datetime.css";
 
@@ -73,6 +73,12 @@ const App = () => {
     }
   }
 
+  /** 指定日付での席一覧取得 */
+  const dateChangeYmd = (dateYmd) => {
+    setSeatDate(dateYmd);
+    childRef.current.changeSeatList(parseStringToDate(dateYmd), floor);
+  }
+
   const getSeatDate = () => {
     return seatDate;
   }
@@ -120,6 +126,7 @@ const App = () => {
         getSeatDate={getSeatDate}
         getFloor={getFloor}
         admin={admin}
+        dateChangeYmd={dateChangeYmd}
       />
     </div>
   );

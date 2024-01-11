@@ -302,7 +302,7 @@ const LeafletMain = (props, ref) => {
             seatId={ seat.seat_id}
             userName={ seat.user_name}
             seatDate={ seat.seat_date}
-            tooltip_direction={ seat.tooltip_direction}
+            tooltipDirection={ seat.tooltip_direction}
             isPermanent={ (seat.seat_date === "XXXX/XX/XX")? true:false}
             getSelectedDate={ getselectedDate}
             getCurrentSeatList={ getCurrentSeatList}
@@ -312,6 +312,7 @@ const LeafletMain = (props, ref) => {
             iconClass={iconClass}
             markerDelete={markerDelete}
             image={(seat.image_data !== null)? seat.image_data: null}
+            dateChangeYmd={props.dateChangeYmd}
           />
         );
       })}

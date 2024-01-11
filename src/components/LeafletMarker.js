@@ -117,7 +117,7 @@ const LeafletMarker = (props) => {
   //固定席フラグ
   const [permanentFlg, setPermanentFlg] = useState(false);
   //tooltipの表示向き　指摘がなければauto
-  let tooltip_direction = props.tooltip_direction;
+  let tooltip_direction = props.tooltipDirection;
   if (tooltip_direction == null) {
     tooltip_direction = "auto";
   }
@@ -495,7 +495,7 @@ const LeafletMarker = (props) => {
             {!props.isPermanent
               ?
               <MaterialTooltip placement="right" title={MESSAGE.SEAT_SCHEDULE_BUTTON}>
-                <Button onClick={onClickCalendarButton}>
+                <Button className="calendar-button" onClick={onClickCalendarButton}>
                   <CalendarMonthTwoToneIcon />
                 </Button>
                 </MaterialTooltip>
@@ -518,6 +518,7 @@ const LeafletMarker = (props) => {
         handleClose={calendarClose}
         seatId={seatId}
         fromDate={fromDate}
+        dateChangeYmd={props.dateChangeYmd}
       />
     </Marker>
   )

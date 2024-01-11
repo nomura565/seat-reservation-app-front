@@ -26,6 +26,8 @@ const SeatCalendar = (props, ref) => {
   const [seatId, setSeatId] = useState(props.seatId);
   //YM
   let currentDateYm = formatDateToYM(props.fromDate);
+  //YMD
+  let currentDateYmd = formatDateToString(props.fromDate);
   //YYYYMMDD
   const [dateYmd, setDateYmd] = useState(parseStringToDate(props.fromDate));
   //席ID
@@ -34,8 +36,14 @@ const SeatCalendar = (props, ref) => {
   //日付変更時コールバック
   const onNavigate = useCallback((newDate) => {
     const _newDateYm = formatDateToYM(newDate);
+    const _newDateYmd = formatDateToString(newDate);
     if(_newDateYm !== currentDateYm){
       getCalendarList(seatId, formatDateToString(newDate));
+    }else if(_newDateYmd !== currentDateYmd){
+      //同じ月の違う日をクリックしたときはその日の席一覧を表示して閉じる
+      currentDateYmd = _newDateYmd;
+      props.handleClose();
+      props.dateChangeYmd(_newDateYmd);
     }
   }, [seatId, currentDateYm]);
 
@@ -52,11 +60,13 @@ const SeatCalendar = (props, ref) => {
     setCalendarList([]);
 
     const _dateYm = formatDateToYM(_fromDate);
-    const _dateYmd = _dateYm+"/01";
-    const _dateYmNext = formatDateToYM(addMonthStringDateToDate(_dateYmd, 1));
-    const _dateYmPrev = formatDateToYM(addMonthStringDateToDate(_dateYmd, -1));
+    const _dateYmd = formatDateToString(_fromDate);
+    const _dateYmdFirst = _dateYm+"/01";
+    const _dateYmNext = formatDateToYM(addMonthStringDateToDate(_dateYmdFirst, 1));
+    const _dateYmPrev = formatDateToYM(addMonthStringDateToDate(_dateYmdFirst, -1));
     setSeatId(_seatId);
     currentDateYm = _dateYm;
+    currentDateYmd = _dateYmd;
     setDateYmd(parseStringToDate(_fromDate));
 
     axios
