@@ -3,7 +3,7 @@ import React, { useState,useImperativeHandle,forwardRef,useEffect  } from 'react
 import { MapContainer, TileLayer, ImageOverlay,useMapEvents, useMap } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import {API_URL} from "./Const";
+import {API_URL, PERMANENT_DATE} from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -303,7 +303,7 @@ const LeafletMain = (props, ref) => {
             userName={ seat.user_name}
             seatDate={ seat.seat_date}
             tooltipDirection={ seat.tooltip_direction}
-            isPermanent={ (seat.seat_date === "XXXX/XX/XX")? true:false}
+            isPermanent={ (seat.seat_date === PERMANENT_DATE)? true:false}
             getSelectedDate={ getselectedDate}
             getCurrentSeatList={ getCurrentSeatList}
             tooltipPermanent={tooltipPermanent}
@@ -313,6 +313,7 @@ const LeafletMain = (props, ref) => {
             markerDelete={markerDelete}
             image={(seat.image_data !== null)? seat.image_data: null}
             dateChangeYmd={props.dateChangeYmd}
+            registedComment={seat.comment}
           />
         );
       })}

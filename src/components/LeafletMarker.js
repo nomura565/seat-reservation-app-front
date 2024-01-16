@@ -6,7 +6,7 @@ import { TextField, Button, ButtonGroup, FormControlLabel, Checkbox, Tooltip as 
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
-import { API_URL, DATE_FORMAT } from "./Const";
+import { API_URL, DATE_FORMAT, PERMANENT_DATE } from "./Const";
 import LeafletDialog from "./LeafletDialog";
 import { useCookies } from "react-cookie";
 import Resizer from "react-image-file-resizer";
@@ -17,6 +17,8 @@ import { format } from 'react-string-format';
 import SeatCalendar from './SeatCalendar';
 import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
 import {formatDateToString} from "./FormatDate";
+import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
+import CommentTextField from "./CommentTextField";
 
 /** メッセージ */
 const MESSAGE = {
@@ -30,6 +32,7 @@ const MESSAGE = {
   DIALOG_API_FAIL_DETAIL: "登録に失敗しました。座席一覧を再読み込みします。",
   DIALOG_VALID_FAIL_TITLE: "バリデーションエラー",
   DIALOG_VALID_FAIL_DETAIL_NAME_EMPTY: "名前が入力されていません。",
+  DIALOG_VALID_FAIL_DETAIL_REPLY_EMPTY: "リプライが入力されていません。",
   DIALOG_VALID_FAIL_DETAIL_DATE_TERM_ILLEGAL: "日付の期間が正しくありません。",
   DIALOG_VALID_FAIL_DETAIL_DATE_ILLEGAL: "正しい日付が入力されていません。",
   ICON_UPLOAD_BUTTON: "アイコンアップロード",
@@ -40,7 +43,8 @@ const MESSAGE = {
   UNSEAT_REGIST_BUTTON: "空席にする",
   API_RESPONSE_UNEXPECT:"APIのレスポンスが正常以外です",
   UNSEAT_TOOLTIP_TITLE: "複数日が選択されている場合、指定範囲の同じ名前の席を空席にします",
-  SEAT_SCHEDULE_BUTTON:"この席の予定を確認する"
+  SEAT_SCHEDULE_BUTTON:"この席の予定を確認する",
+  COMMENT_REGIST_BUTTON: "コメントする",
 }
 
 const LeafletMarker = (props) => {
@@ -96,7 +100,7 @@ const LeafletMarker = (props) => {
   const unUseClassName = "unuse";
 
   const [userName, setUserName] = useState(user_name);
-  const [fromDate, setFromDate] = useState(formatDateToString(Today));
+  const [fromDate, setFromDate] = useState(formatDateToString(props.getSelectedDate()));
   const [toDate, setToDate] = useState(Today);
   //dialogで使う名前　入力して登録せず閉じたときに元に戻す用
   const [defaultUserName, setDefaultUserName] = useState(user_name);
@@ -128,10 +132,19 @@ const LeafletMarker = (props) => {
   const [admin, setAdmin] = useState(props.admin);
   //アイコン
   const [imageData, setImageData] = useState(null);
-  const [lat, setLat] = useState(null);
-  const [lng, setLng] = useState(null);
+  let currentLat = null;
+  let currentLng = null;
+
   //カレンダーオープンフラグ
   const [calendarOpen, setCalendarOpen] = useState(false);
+  //席登録時のコメント
+  const [comment, setComment] = useState(null);
+  //コメントへのリプライ
+  const [replyComment, setReplyComment] = useState("");
+
+  let tmpReplyList = [];
+  //リプライ一覧
+  const [replyList, setReplyList] = useState(tmpReplyList);
 
   const inputFileRef = useRef();
   const seatCalendarRef = useRef();
@@ -215,7 +228,8 @@ const LeafletMarker = (props) => {
         to_date: _toDate,
         user_name: userName,
         permanent_flg: permanentFlg,
-        image_data: imageData
+        image_data: imageData,
+        comment: comment
       })
       .then((response) => {
         if (response.status === 200) {
@@ -302,6 +316,14 @@ const LeafletMarker = (props) => {
     setPermanentFlg(e.target.checked);
   }
 
+  const commentChange = (e) => {
+    setComment(e.target.value);
+  }
+
+  const replyChange = (e) => {
+    setReplyComment(e.target.value);
+  }
+
   const parentMap = useMap();
   const markerRef = useRef(null);
 
@@ -320,8 +342,14 @@ const LeafletMarker = (props) => {
       props.setPositionForSeatList(seatId, AfterPosition.lat, AfterPosition.lng);
     },
     //席クリック　削除するかはmarkerDeleteで判定
-    click: () => {
+    click: (e) => {
+      currentLat = e.latlng.lat;
+      currentLng = e.latlng.lng;
       props.markerDelete(seatId);
+      if(!props.admin){
+        //リプライ一覧を取得する
+        getReplyList(true);
+      }
     }
   }
 
@@ -331,8 +359,8 @@ const LeafletMarker = (props) => {
       "lat": _lat,
       "lng": _lng
     }
-    setLat(_lat);
-    setLng(_lng);
+    currentLat = _lat;
+    currentLng = _lng;
     setTimeout(function () {
       parentMap.setView(latlng, parentMap.getZoom());
     }, 10);
@@ -345,9 +373,6 @@ const LeafletMarker = (props) => {
       setFromDate(formatDateToString(_tmpDate));
       setToDate(_tmpDate);
       setImageData(null);
-      //座席アイコンが押下された時に中央に移動する
-      setViewCurrentLatlng(e.popup._latlng.lat + 20, e.popup._latlng.lng);
-
     },
     popupclose(e) {
       if (currentUpdateMode === UpdateMode.default) {
@@ -384,7 +409,7 @@ const LeafletMarker = (props) => {
       const file = e.target.files[0];
       const image = await resizeFile(file);
       setImageData(image);
-      setViewCurrentLatlng(lat + 100, lng);
+      setViewCurrentLatlng(currentLat + 100, currentLng);
     } else {
       setImageData(null);
     }
@@ -419,6 +444,79 @@ const LeafletMarker = (props) => {
   const calendarClose = () => {
     setCalendarOpen(false);
   }
+
+  /**返信送信ボタン押下イベント */
+  const onClickReplySendButton = () => {
+    //バリデーションチェック
+    if (replyComment === null || replyComment.trim() === "") {
+      dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_REPLY_EMPTY);
+      return;
+    }
+    const _seatDate = (props.isPermanent)? PERMANENT_DATE : formatDateToString(props.getSelectedDate());
+    axios
+    .post(API_URL.REPLY_INSERT, {
+      seat_date: _seatDate,
+      seat_id: seatId,
+      comment: replyComment
+    })
+    .then((response) => {
+      if (response.status === 200) {
+        getReplyList(false);
+        setReplyComment("");
+      } else {
+        InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
+        return;
+      }
+
+    })
+    .catch((error) => {
+      InsertFail(error.message);
+      return;
+    });
+  }
+
+    /**リプライ一覧取得 */
+    const getReplyList = (LatlngAdjustFlg) => {
+      setReplyList([]);
+      const _seatDate = (props.isPermanent)? PERMANENT_DATE : fromDate;
+      axios
+        .post(API_URL.REPLY_SELECT, {
+          seat_date: _seatDate,
+          seat_id: seatId
+        })
+        .then((response) => {
+          setReplyList(response.data);
+          if(LatlngAdjustFlg){
+            //ポップアップ表示位置の調整
+            let _adjustLat = currentLat;
+
+            if(!useSeatFlg){
+              _adjustLat = _adjustLat + 80;
+            }else{
+              if(props.image !== null){
+                _adjustLat = _adjustLat + 90;
+              }
+              if(props.registedComment !== null){
+                _adjustLat = _adjustLat + 60;
+              }
+              if(response.data.length == 1){
+                _adjustLat = _adjustLat + 60;
+              }
+              if(response.data.length >= 2){
+                _adjustLat = _adjustLat + 140;
+              }
+            }
+            setViewCurrentLatlng(_adjustLat, currentLng);
+          }
+          //スクロールを一番下に
+          if(response.data.length >= 2){
+            setTimeout(function () {
+              const target = document.getElementById("replyListArea");
+            target.scrollTop = target.scrollHeight;
+            }, 100);
+          }
+        });
+    }
 
   return (
     <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
@@ -455,7 +553,72 @@ const LeafletMarker = (props) => {
             <div className={useSeatFlg ? "image" : unUseClassName}>
               <img src={props.image} />
             </div>
-            <div><TextField id="outlined-basic" disabled={useSeatFlg} name="userName" value={userName} onChange={userNameChange} label={MESSAGE.NAME} variant="standard" size="small" /></div>
+            <div>
+              <TextField 
+                disabled={useSeatFlg} 
+                name="userName" 
+                value={userName} 
+                onChange={userNameChange} 
+                label={MESSAGE.NAME} 
+                variant="standard" 
+                size="small" 
+              />
+              {!useSeatFlg
+                ?
+                <div className='comment-area'>
+                  <CommentTextField 
+                    isComment={true}
+                    readOnly={false}
+                    onChange={commentChange}
+                  />
+                </div>
+                :
+                ""
+              }
+            </div>
+            <div className={useSeatFlg ? "" : unUseClassName}>
+              {props.registedComment !== null
+                ?
+                <div className='comment-area'>
+                  <CommentTextField 
+                    isComment={true}
+                    readOnly={true}
+                    value={props.registedComment}
+                  />
+                </div>
+                :
+                ""
+              }
+              <div id="replyListArea" className='reply-list-area'>
+              {replyList.map((reply) => {
+                return (
+                  <div className='reply-area' key={reply.key}>
+                    <CommentTextField 
+                      isComment={false}
+                      readOnly={true}
+                      value={reply.comment}
+                    />
+                  </div>
+                );
+              })}
+              </div>
+              {useSeatFlg
+              ?
+              <div className='reply-area'>
+                <CommentTextField 
+                  isComment={false}
+                  readOnly={false}
+                  value={replyComment}
+                  onChange={replyChange}
+                />
+                <Button className="reply-send-button" onClick={() => onClickReplySendButton()}>
+                  <AddCommentTwoToneIcon />
+                </Button>
+              </div>
+              :
+              ""
+              }
+            </div>
             <div className={useSeatFlg && props.isPermanent ? "use-seat-date" : "unuse-seat-date"}>
               <input
                 className="date-input"
@@ -465,9 +628,7 @@ const LeafletMarker = (props) => {
               ～
               <Datetime
                 locale='ja'
-                inputProps={
-                  { "className": "date-input", "readOnly": "readOnly" }
-                }
+                inputProps={{ "className": "date-input", "readOnly": "readOnly" }}
                 dateFormat={DATE_FORMAT}
                 timeFormat={false}
                 value={toDate}
@@ -498,7 +659,7 @@ const LeafletMarker = (props) => {
                 <Button className="calendar-button" onClick={onClickCalendarButton}>
                   <CalendarMonthTwoToneIcon />
                 </Button>
-                </MaterialTooltip>
+              </MaterialTooltip>
               :
               ""
             }

@@ -29,6 +29,7 @@ seat-reservation-app-front/
 │ │ ├ office.png               オフィス背景画像
 ├ src/                         ソースフォルダ
 │ │ ├ components               座席使用中アイコン
+│ │ │ ├ CommentTextField.js    コメント用テキストフィールド
 │ │ │ ├ Const.js               定数
 │ │ │ ├ FloorAndDate.js        フロア（オフィス）と日付選択コンポーネント
 │ │ │ ├ FormatDate.js          日付フォーマット関連
@@ -49,6 +50,7 @@ seat-reservation-app-front/
 - オフィスの切り替え
 - 未来日の座席予約、閲覧
 - 固定席の設定（固定席の場合、他の席情報を強制的に削除します。年月日はXXXX/XX/XXで登録されます）
+- コメントの追加
 
 ## できないこと
 
