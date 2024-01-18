@@ -39,9 +39,13 @@ const LeafletMain = (props, ref) => {
   //オフィス画像の初期値
   const [floorMap, setFloorMap] = useState("office.png");
   //leafletの中心座標
-  const centerLatLng = new LatLng(235, 400);
+  const defaultCenterLatLng = new LatLng(235, 400);
+  const anotherCenterLatLng = new LatLng(365, 400);
+  const [centerLatLng, setCenterLatLng] = useState(defaultCenterLatLng);
   //leafletの描画サイズ
-  const bounds = new LatLngBounds([0, 0], [470, 835]);
+  const defaultBounds = new LatLngBounds([0, 0], [470, 835]);
+  const anotherBounds = new LatLngBounds([0, 0], [600, 735]);
+  const [bounds, setBounds] = useState(defaultBounds);
 
   let tmpSeatList = [];
   //席一覧
@@ -175,6 +179,18 @@ const LeafletMain = (props, ref) => {
     /** App.jsでオフィスが変更されたときに呼ばれる　選択されたオフィス画像をセットする */
     setFloorMapFromParent: (floor_map) => {
       setFloorMap(floor_map);
+      //_vws(vertical writing style)がファイル名にあったら縦長
+      if(floor_map.indexOf("_vws") !== -1){
+        //leafletの中心座標
+        setCenterLatLng(anotherCenterLatLng);
+        //leafletの描画サイズ
+        setBounds(anotherBounds);
+      }else{
+        //leafletの中心座標
+        setCenterLatLng(defaultCenterLatLng);
+        //leafletの描画サイズ
+        setBounds(defaultBounds);
+      }
     },
     /** App.jsで座席位置登録が押下されたときに呼ばれる　席情報を更新する */
     updateSeatLatLng: () => {
