@@ -47,6 +47,9 @@ const MESSAGE = {
   COMMENT_REGIST_BUTTON: "コメントする",
 }
 
+let currentLat = null;
+let currentLng = null;
+
 const LeafletMarker = (props) => {
   //使用中アイコン
   const occupyIcon = new icon({
@@ -132,8 +135,7 @@ const LeafletMarker = (props) => {
   const [admin, setAdmin] = useState(props.admin);
   //アイコン
   const [imageData, setImageData] = useState(null);
-  let currentLat = null;
-  let currentLng = null;
+  
 
   //カレンダーオープンフラグ
   const [calendarOpen, setCalendarOpen] = useState(false);
