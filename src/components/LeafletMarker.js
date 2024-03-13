@@ -28,6 +28,7 @@ const MESSAGE = {
   DIALOG_PERMANENT_SEAT_REGIST_DETAIL: "{0}さんを固定席で座席登録しました。",
   DIALOG_UNSEAT_REGIST_TITLE: "空席登録",
   DIALOG_UNSEAT_REGIST_DETAIL: "{0}さんの{1}～{2}の座席を空席にしました。",
+  DIALOG_UNSEAT_REGIST_DETAIL_PERMANENT: "この座席の全ての日付を空席にしました。",
   DIALOG_API_FAIL_TITLE: "APIエラー",
   DIALOG_API_FAIL_DETAIL: "登録に失敗しました。座席一覧を再読み込みします。",
   DIALOG_VALID_FAIL_TITLE: "バリデーションエラー",
@@ -37,7 +38,7 @@ const MESSAGE = {
   DIALOG_VALID_FAIL_DETAIL_DATE_ILLEGAL: "正しい日付が入力されていません。",
   ICON_UPLOAD_BUTTON: "アイコンアップロード",
   NAME: "名前",
-  PARMANENT_TOOLTIP_TITLE: "固定席の場合、他の席情報を強制的に削除します",
+  PARMANENT_TOOLTIP_TITLE: "固定席の場合、他の人が予約していても過去未来の席情報を強制的に削除しますので確認してから登録してください。",
   PARMANENT: "固定席にする",
   SEAT_REGIST_BUTTON: "座席登録",
   UNSEAT_REGIST_BUTTON: "空席にする",
@@ -135,8 +136,8 @@ const LeafletMarker = (props) => {
   const [admin, setAdmin] = useState(props.admin);
   //アイコン
   const [imageData, setImageData] = useState(null);
-  
-
+  //ポップアップオープンフラグ
+  const [isPoppupOpen, setIsPoppupOpen] = useState(false);
   //カレンダーオープンフラグ
   const [calendarOpen, setCalendarOpen] = useState(false);
   //席登録時のコメント
@@ -188,6 +189,9 @@ const LeafletMarker = (props) => {
       _popupText = MESSAGE.UNSEAT;
       _title = MESSAGE.DIALOG_UNSEAT_REGIST_TITLE;
       _text = format(MESSAGE.DIALOG_UNSEAT_REGIST_DETAIL, userName, _fromDate, _toDate);
+      if (props.isPermanent) {
+        _text = MESSAGE.DIALOG_UNSEAT_REGIST_DETAIL_PERMANENT;
+      }
     }else{
       const cookieDate = new Date();
       cookieDate.setDate(cookieDate.getDate() + 7);
@@ -375,6 +379,8 @@ const LeafletMarker = (props) => {
       setFromDate(formatDateToString(_tmpDate));
       setToDate(_tmpDate);
       setImageData(null);
+      setIsPoppupOpen(true);
+      setPermanentFlg(false);
     },
     popupclose(e) {
       if (currentUpdateMode === UpdateMode.default) {
@@ -385,6 +391,7 @@ const LeafletMarker = (props) => {
       } else {
         currentUpdateMode = UpdateMode.default;
       }
+      setIsPoppupOpen(false);
     }
   })
 
@@ -641,8 +648,8 @@ const LeafletMarker = (props) => {
 
             </div>
             <div className={useSeatFlg ? unUseClassName : ""}>
-              <MaterialTooltip placement="right" title={MESSAGE.PARMANENT_TOOLTIP_TITLE}>
-                <FormControlLabel required control={<Checkbox onChange={handleChange} size="small" />} label={MESSAGE.PARMANENT} />
+              <MaterialTooltip placement="right" title={MESSAGE.PARMANENT_TOOLTIP_TITLE} open={permanentFlg && isPoppupOpen}>
+                <FormControlLabel required control={<Checkbox checked={permanentFlg} onChange={handleChange} size="small" />} label={MESSAGE.PARMANENT} />
               </MaterialTooltip>
             </div>
             <div><ButtonGroup size="small" aria-label="small button group">
