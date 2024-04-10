@@ -2,8 +2,8 @@ import React from 'react'
 import { TextField } from "@mui/material";
 
 const CommentTextField = (props) => {
-  const label = (props.isComment === true)? "comment" : "reply";
-  const variant = (props.readOnly === true)? "filled" : "standard";
+  const label = (props.isComment === true) ? "comment" : "reply";
+  const variant = (props.readOnly === true) ? "filled" : "standard";
 
   return (
     <TextField

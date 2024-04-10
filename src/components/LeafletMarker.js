@@ -16,7 +16,7 @@ import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import { format } from 'react-string-format';
 import SeatCalendar from './SeatCalendar';
 import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
-import {formatDateToString} from "./FormatDate";
+import { formatDateToString } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
 
@@ -42,9 +42,9 @@ const MESSAGE = {
   PARMANENT: "固定席にする",
   SEAT_REGIST_BUTTON: "座席登録",
   UNSEAT_REGIST_BUTTON: "空席にする",
-  API_RESPONSE_UNEXPECT:"APIのレスポンスが正常以外です",
+  API_RESPONSE_UNEXPECT: "APIのレスポンスが正常以外です",
   UNSEAT_TOOLTIP_TITLE: "複数日が選択されている場合、指定範囲の同じ名前の席を空席にします",
-  SEAT_SCHEDULE_BUTTON:"この席の予定を確認する",
+  SEAT_SCHEDULE_BUTTON: "この席の予定を確認する",
   COMMENT_REGIST_BUTTON: "コメントする",
 }
 
@@ -183,8 +183,8 @@ const LeafletMarker = (props) => {
     let _title = MESSAGE.DIALOG_SEAT_REGIST_TITLE;
     let _text = format(MESSAGE.DIALOG_SEAT_REGIST_DETAIL, userName, _fromDate, _toDate);
     if (permanentFlg) _text = format(MESSAGE.DIALOG_PERMANENT_SEAT_REGIST_DETAIL, userName);
-    
-    if(unseatFlg){
+
+    if (unseatFlg) {
       _userName = "";
       _popupText = MESSAGE.UNSEAT;
       _title = MESSAGE.DIALOG_UNSEAT_REGIST_TITLE;
@@ -192,7 +192,7 @@ const LeafletMarker = (props) => {
       if (props.isPermanent) {
         _text = MESSAGE.DIALOG_UNSEAT_REGIST_DETAIL_PERMANENT;
       }
-    }else{
+    } else {
       const cookieDate = new Date();
       cookieDate.setDate(cookieDate.getDate() + 7);
       setCookie("userName", userName, { expires: cookieDate, path: '/' });
@@ -218,7 +218,7 @@ const LeafletMarker = (props) => {
     let _fromDate = fromDate;
     let _toDate = formatToDateAndValidDate();
 
-    if(_toDate == null) return;
+    if (_toDate == null) return;
 
     let _temp = (userName === null) ? "" : userName;
     if (_temp.trim() === "") {
@@ -266,8 +266,8 @@ const LeafletMarker = (props) => {
         dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_DATE_TERM_ILLEGAL);
         return null;
       }
-    } catch(e) {
-      console.log( e.message );
+    } catch (e) {
+      console.log(e.message);
       dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_DATE_ILLEGAL);
       return null;
     }
@@ -282,7 +282,7 @@ const LeafletMarker = (props) => {
     let _selectedDate = formatDateToString(props.getSelectedDate());
     let _toDate = formatToDateAndValidDate();
 
-    if(_toDate == null) return;
+    if (_toDate == null) return;
 
     const sendData = {
       seat_id: seatId,
@@ -352,7 +352,7 @@ const LeafletMarker = (props) => {
       currentLat = e.latlng.lat;
       currentLng = e.latlng.lng;
       props.markerDelete(seatId);
-      if(!props.admin){
+      if (!props.admin) {
         //リプライ一覧を取得する
         getReplyList(true);
       }
@@ -461,71 +461,71 @@ const LeafletMarker = (props) => {
       dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_REPLY_EMPTY);
       return;
     }
-    const _seatDate = (props.isPermanent)? PERMANENT_DATE : formatDateToString(props.getSelectedDate());
+    const _seatDate = (props.isPermanent) ? PERMANENT_DATE : formatDateToString(props.getSelectedDate());
     axios
-    .post(API_URL.REPLY_INSERT, {
-      seat_date: _seatDate,
-      seat_id: seatId,
-      comment: replyComment
-    })
-    .then((response) => {
-      if (response.status === 200) {
-        getReplyList(false);
-        setReplyComment("");
-      } else {
-        InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
-        return;
-      }
+      .post(API_URL.REPLY_INSERT, {
+        seat_date: _seatDate,
+        seat_id: seatId,
+        comment: replyComment
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          getReplyList(false);
+          setReplyComment("");
+        } else {
+          InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
+          return;
+        }
 
-    })
-    .catch((error) => {
-      InsertFail(error.message);
-      return;
-    });
+      })
+      .catch((error) => {
+        InsertFail(error.message);
+        return;
+      });
   }
 
-    /**リプライ一覧取得 */
-    const getReplyList = (LatlngAdjustFlg) => {
-      setReplyList([]);
-      const _seatDate = (props.isPermanent)? PERMANENT_DATE : fromDate;
-      axios
-        .post(API_URL.REPLY_SELECT, {
-          seat_date: _seatDate,
-          seat_id: seatId
-        })
-        .then((response) => {
-          setReplyList(response.data);
-          if(LatlngAdjustFlg){
-            //ポップアップ表示位置の調整
-            let _adjustLat = currentLat;
+  /**リプライ一覧取得 */
+  const getReplyList = (LatlngAdjustFlg) => {
+    setReplyList([]);
+    const _seatDate = (props.isPermanent) ? PERMANENT_DATE : fromDate;
+    axios
+      .post(API_URL.REPLY_SELECT, {
+        seat_date: _seatDate,
+        seat_id: seatId
+      })
+      .then((response) => {
+        setReplyList(response.data);
+        if (LatlngAdjustFlg) {
+          //ポップアップ表示位置の調整
+          let _adjustLat = currentLat;
 
-            if(!useSeatFlg){
-              _adjustLat = _adjustLat + 80;
-            }else{
-              if(props.image !== null){
-                _adjustLat = _adjustLat + 90;
-              }
-              if(props.registedComment !== null){
-                _adjustLat = _adjustLat + 60;
-              }
-              if(response.data.length == 1){
-                _adjustLat = _adjustLat + 60;
-              }
-              if(response.data.length >= 2){
-                _adjustLat = _adjustLat + 140;
-              }
+          if (!useSeatFlg) {
+            _adjustLat = _adjustLat + 80;
+          } else {
+            if (props.image !== null) {
+              _adjustLat = _adjustLat + 90;
             }
-            setViewCurrentLatlng(_adjustLat, currentLng);
+            if (props.registedComment !== null) {
+              _adjustLat = _adjustLat + 60;
+            }
+            if (response.data.length == 1) {
+              _adjustLat = _adjustLat + 60;
+            }
+            if (response.data.length >= 2) {
+              _adjustLat = _adjustLat + 140;
+            }
           }
-          //スクロールを一番下に
-          if(response.data.length >= 2){
-            setTimeout(function () {
-              const target = document.getElementById("replyListArea");
+          setViewCurrentLatlng(_adjustLat, currentLng);
+        }
+        //スクロールを一番下に
+        if (response.data.length >= 2) {
+          setTimeout(function () {
+            const target = document.getElementById("replyListArea");
             target.scrollTop = target.scrollHeight;
-            }, 100);
-          }
-        });
-    }
+          }, 100);
+        }
+      });
+  }
 
   return (
     <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
@@ -563,19 +563,19 @@ const LeafletMarker = (props) => {
               <img src={props.image} />
             </div>
             <div>
-              <TextField 
-                disabled={useSeatFlg} 
-                name="userName" 
-                value={userName} 
-                onChange={userNameChange} 
-                label={MESSAGE.NAME} 
-                variant="standard" 
-                size="small" 
+              <TextField
+                disabled={useSeatFlg}
+                name="userName"
+                value={userName}
+                onChange={userNameChange}
+                label={MESSAGE.NAME}
+                variant="standard"
+                size="small"
               />
               {!useSeatFlg
                 ?
                 <div className='comment-area'>
-                  <CommentTextField 
+                  <CommentTextField
                     isComment={true}
                     readOnly={false}
                     onChange={commentChange}
@@ -589,7 +589,7 @@ const LeafletMarker = (props) => {
               {props.registedComment !== null
                 ?
                 <div className='comment-area'>
-                  <CommentTextField 
+                  <CommentTextField
                     isComment={true}
                     readOnly={true}
                     value={props.registedComment}
@@ -599,33 +599,33 @@ const LeafletMarker = (props) => {
                 ""
               }
               <div id="replyListArea" className='reply-list-area'>
-              {replyList.map((reply) => {
-                return (
-                  <div className='reply-area' key={reply.key}>
-                    <CommentTextField 
-                      isComment={false}
-                      readOnly={true}
-                      value={reply.comment}
-                    />
-                  </div>
-                );
-              })}
+                {replyList.map((reply) => {
+                  return (
+                    <div className='reply-area' key={reply.key}>
+                      <CommentTextField
+                        isComment={false}
+                        readOnly={true}
+                        value={reply.comment}
+                      />
+                    </div>
+                  );
+                })}
               </div>
               {useSeatFlg
-              ?
-              <div className='reply-area'>
-                <CommentTextField 
-                  isComment={false}
-                  readOnly={false}
-                  value={replyComment}
-                  onChange={replyChange}
-                />
-                <Button className="reply-send-button" onClick={() => onClickReplySendButton()}>
-                  <AddCommentTwoToneIcon />
-                </Button>
-              </div>
-              :
-              ""
+                ?
+                <div className='reply-area'>
+                  <CommentTextField
+                    isComment={false}
+                    readOnly={false}
+                    value={replyComment}
+                    onChange={replyChange}
+                  />
+                  <Button className="reply-send-button" onClick={() => onClickReplySendButton()}>
+                    <AddCommentTwoToneIcon />
+                  </Button>
+                </div>
+                :
+                ""
               }
             </div>
             <div className={useSeatFlg && props.isPermanent ? "use-seat-date" : "unuse-seat-date"}>
@@ -662,16 +662,16 @@ const LeafletMarker = (props) => {
                 </MaterialTooltip>
               </div>
             </ButtonGroup>
-            {!props.isPermanent
-              ?
-              <MaterialTooltip placement="right" title={MESSAGE.SEAT_SCHEDULE_BUTTON}>
-                <Button className="calendar-button" onClick={onClickCalendarButton}>
-                  <CalendarMonthTwoToneIcon />
-                </Button>
-              </MaterialTooltip>
-              :
-              ""
-            }
+              {!props.isPermanent
+                ?
+                <MaterialTooltip placement="right" title={MESSAGE.SEAT_SCHEDULE_BUTTON}>
+                  <Button className="calendar-button" onClick={onClickCalendarButton}>
+                    <CalendarMonthTwoToneIcon />
+                  </Button>
+                </MaterialTooltip>
+                :
+                ""
+              }
             </div>
           </Box>
         </Popup>
@@ -682,7 +682,7 @@ const LeafletMarker = (props) => {
         dialogTitleMessage={dialogTitleMessage}
         dialogContentMessage={dialogContentMessage}
       />
-      <SeatCalendar 
+      <SeatCalendar
         ref={seatCalendarRef}
         open={calendarOpen}
         handleClose={calendarClose}

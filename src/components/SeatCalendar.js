@@ -37,9 +37,9 @@ const SeatCalendar = (props, ref) => {
   const onNavigate = useCallback((newDate) => {
     const _newDateYm = formatDateToYM(newDate);
     const _newDateYmd = formatDateToString(newDate);
-    if(_newDateYm !== currentDateYm){
+    if (_newDateYm !== currentDateYm) {
       getCalendarList(seatId, formatDateToString(newDate));
-    }else if(_newDateYmd !== currentDateYmd){
+    } else if (_newDateYmd !== currentDateYmd) {
       //同じ月の違う日をクリックしたときはその日の席一覧を表示して閉じる
       currentDateYmd = _newDateYmd;
       props.handleClose();
@@ -61,7 +61,7 @@ const SeatCalendar = (props, ref) => {
 
     const _dateYm = formatDateToYM(_fromDate);
     const _dateYmd = formatDateToString(_fromDate);
-    const _dateYmdFirst = _dateYm+"/01";
+    const _dateYmdFirst = _dateYm + "/01";
     const _dateYmNext = formatDateToYM(addMonthStringDateToDate(_dateYmdFirst, 1));
     const _dateYmPrev = formatDateToYM(addMonthStringDateToDate(_dateYmdFirst, -1));
     setSeatId(_seatId);
@@ -90,13 +90,13 @@ const SeatCalendar = (props, ref) => {
     calendarList.map((calendar) => {
       //すでに一覧に追加した中に同じ名前、かつ昨日の日付のものがあれば抽出
       const yesterday = addDayStringDateToString(calendar.seat_date, -1);
-      const alreadyAdded = _calendarList.find((_calendar)=> {
+      const alreadyAdded = _calendarList.find((_calendar) => {
         return (_calendar.title === calendar.user_name && formatDateToString(_calendar.end) === yesterday);
       });
       //存在したらそこの終了日を更新　0時だとカレンダーの表示上日を跨がないので適当に時間を加算
-      if(typeof alreadyAdded !== "undefined"){
+      if (typeof alreadyAdded !== "undefined") {
         alreadyAdded.end = addHourStringDateToDate(calendar.seat_date, 12);
-      }else{
+      } else {
         let addCalendar = {
           title: calendar.user_name,
           start: parseStringToDate(calendar.seat_date),

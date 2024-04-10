@@ -1,16 +1,16 @@
-import { LatLng,LatLngBounds,CRS } from 'leaflet';
-import React, { useState,useImperativeHandle,forwardRef,useEffect  } from 'react'
-import { MapContainer, TileLayer, ImageOverlay,useMapEvents, useMap } from 'react-leaflet';
+import { LatLng, LatLngBounds, CRS } from 'leaflet';
+import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
+import { MapContainer, TileLayer, ImageOverlay, useMapEvents, useMap } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import {API_URL, PERMANENT_DATE} from "./Const";
+import { API_URL, PERMANENT_DATE } from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { Button,ButtonGroup } from "@mui/material";
+import { Button, ButtonGroup } from "@mui/material";
 import LeafletDialog from "./LeafletDialog";
-import {formatDateToString} from "./FormatDate";
+import { formatDateToString } from "./FormatDate";
 
 /** メッセージ */
 const MESSAGE = {
@@ -19,7 +19,7 @@ const MESSAGE = {
   DIALOG_FAIL_DETAIL: "登録に失敗しました。座席一覧を再読み込みします。",
   DIALOG_SUCCESS_TITLE: "座席位置登録",
   DIALOG_SUCCESS_DETAIL: "座席位置を登録しました。",
-  API_RESPONSE_UNEXPECT:"APIのレスポンスが正常以外です",
+  API_RESPONSE_UNEXPECT: "APIのレスポンスが正常以外です",
 }
 
 /*
@@ -80,7 +80,7 @@ const LeafletMain = (props, ref) => {
 
   /** 席一覧を取得する */
   const getSeatList = (date, floor) => {
-    if(map !== undefined){
+    if (map !== undefined) {
       map.closePopup();
     }
     setAddSeatCount(1);
@@ -100,7 +100,7 @@ const LeafletMain = (props, ref) => {
   }
   /** センター位置ボタンクリックイベント　leafletをセンター位置、ズーム0に戻す */
   const onClickMyLocationButton = () => {
-    if(map !== undefined){
+    if (map !== undefined) {
       map.setView(centerLatLng, 0);
     }
   }
@@ -113,9 +113,9 @@ const LeafletMain = (props, ref) => {
   /** 席削除ボタンクリックイベント　席アイコンを点滅状態にする */
   const onClickDeleteButton = () => {
     //削除モードでなければ点滅
-    if(!deleteMode){
+    if (!deleteMode) {
       setIconClass("blinking");
-    }else{
+    } else {
       setIconClass("");
     }
     //削除モード開始or終了
@@ -124,7 +124,7 @@ const LeafletMain = (props, ref) => {
   /** 席追加ボタンクリックイベント　追加アイコンを表示する */
   const onClickAddButton = () => {
     //削除モードなら何もしない
-    if(deleteMode) return;
+    if (deleteMode) return;
     let _temp = seatList;
     //let seat_id = Math.max(...temp.map(t => t.seat_id))+1;addSeatCount
     let _seat_id = MESSAGE.ADD + addSeatCount;
@@ -141,7 +141,7 @@ const LeafletMain = (props, ref) => {
     }
     //配列の最後に追加
     _temp = [...seatList, addSeat];
-    setAddSeatCount(addSeatCount+1);
+    setAddSeatCount(addSeatCount + 1);
     setSeatList(_temp);
   }
   /** 席の位置座標セット　管理モードでドラッグが終了した時点の位置座標をセットする
@@ -150,7 +150,7 @@ const LeafletMain = (props, ref) => {
   const setPositionForSeatList = (seatId, lat, lng) => {
     let _temp = seatList;
     _temp.map((seat) => {
-      if(seat.seat_id === seatId){
+      if (seat.seat_id === seatId) {
         seat.lat = lat;
         seat.lng = lng;
       }
@@ -159,7 +159,7 @@ const LeafletMain = (props, ref) => {
   }
   /** 席削除 */
   const markerDelete = (seatId) => {
-    if(deleteMode){
+    if (deleteMode) {
       let _temp;
       //配列から指摘の席を削除
       _temp = seatList.filter(t => t.seat_id !== seatId);
@@ -167,9 +167,9 @@ const LeafletMain = (props, ref) => {
     }
   }
   //読み込み時の処理
-  useEffect(() =>{
-      getSeatList(props.seatDate, props.floor);
-  },[props.seatDate, props.floor])
+  useEffect(() => {
+    getSeatList(props.seatDate, props.floor);
+  }, [props.seatDate, props.floor])
   //呼び出し元からの参照
   useImperativeHandle(ref, () => ({
     /** App.jsで席日付が変更されたときに呼ばれる　席一覧を取得する */
@@ -180,12 +180,12 @@ const LeafletMain = (props, ref) => {
     setFloorMapFromParent: (floor_map) => {
       setFloorMap(floor_map);
       //_vws(vertical writing style)がファイル名にあったら縦長
-      if(floor_map.indexOf("_vws") !== -1){
+      if (floor_map.indexOf("_vws") !== -1) {
         //leafletの中心座標
         setCenterLatLng(anotherCenterLatLng);
         //leafletの描画サイズ
         setBounds(anotherBounds);
-      }else{
+      } else {
         //leafletの中心座標
         setCenterLatLng(defaultCenterLatLng);
         //leafletの描画サイズ
@@ -222,13 +222,13 @@ const LeafletMain = (props, ref) => {
         seat_list: seatList
       })
       .then((response) => {
-        if(response.status === 200){
+        if (response.status === 200) {
           InsertSuccess();
-        }else{
+        } else {
           InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
           return;
         }
-        
+
       })
       .catch((error) => {
         InsertFail(error.message);
@@ -239,7 +239,7 @@ const LeafletMain = (props, ref) => {
   const handleClose = () => {
     setOpen(false);
 
-    if(refreshFlg){
+    if (refreshFlg) {
       setSeatList([]);
       getCurrentSeatList();
       setRefreshFlg(false);
@@ -263,40 +263,40 @@ const LeafletMain = (props, ref) => {
         variant="contained"
         className="my-button-group"
       >
-        <Button 
-          variant="outlined" 
+        <Button
+          variant="outlined"
           size="small"
           className="my-button my-location-button"
           onClick={onClickMyLocationButton}>
-            <MyLocationIcon className="my-icon" />
+          <MyLocationIcon className="my-icon" />
         </Button>
         {props.admin
           ?
-            <Button 
-              variant="outlined" 
-              size="small"
-              className="my-button my-badge-button"
-              onClick={onClickAddButton}>
-                <PersonAddAlt1Icon className="my-icon" />
-            </Button>
-          : 
-            <Button 
-              variant="outlined" 
-              size="small"
-              className="my-button my-badge-button"
-              onClick={onClickMyBadgeButton}>
-                <VisibilityOffIcon className="my-icon" />
-            </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            className="my-button my-badge-button"
+            onClick={onClickAddButton}>
+            <PersonAddAlt1Icon className="my-icon" />
+          </Button>
+          :
+          <Button
+            variant="outlined"
+            size="small"
+            className="my-button my-badge-button"
+            onClick={onClickMyBadgeButton}>
+            <VisibilityOffIcon className="my-icon" />
+          </Button>
         }
         {props.admin
           ?
-            <Button 
-              variant="outlined" 
-              size="small"
-              className="my-button my-badge-button"
-              onClick={onClickDeleteButton}>
-                <DeleteForeverIcon className="my-icon" />
-            </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            className="my-button my-badge-button"
+            onClick={onClickDeleteButton}>
+            <DeleteForeverIcon className="my-icon" />
+          </Button>
           : ""
         }
       </ButtonGroup>
@@ -314,31 +314,31 @@ const LeafletMain = (props, ref) => {
           <LeafletMarker
             map={map}
             key={seat.key}
-            position={ seat.position}
-            seatId={ seat.seat_id}
-            userName={ seat.user_name}
-            seatDate={ seat.seat_date}
-            tooltipDirection={ seat.tooltip_direction}
-            isPermanent={ (seat.seat_date === PERMANENT_DATE)? true:false}
-            getSelectedDate={ getselectedDate}
-            getCurrentSeatList={ getCurrentSeatList}
+            position={seat.position}
+            seatId={seat.seat_id}
+            userName={seat.user_name}
+            seatDate={seat.seat_date}
+            tooltipDirection={seat.tooltip_direction}
+            isPermanent={(seat.seat_date === PERMANENT_DATE) ? true : false}
+            getSelectedDate={getselectedDate}
+            getCurrentSeatList={getCurrentSeatList}
             tooltipPermanent={tooltipPermanent}
             admin={props.admin}
             setPositionForSeatList={setPositionForSeatList}
             iconClass={iconClass}
             markerDelete={markerDelete}
-            image={(seat.image_data !== null)? seat.image_data: null}
+            image={(seat.image_data !== null) ? seat.image_data : null}
             dateChangeYmd={props.dateChangeYmd}
             registedComment={seat.comment}
           />
         );
       })}
       <LeafletDialog
-            open={open}
-            handleClose={handleClose}
-            dialogTitleMessage={dialogTitleMessage}
-            dialogContentMessage={dialogContentMessage}
-          />
+        open={open}
+        handleClose={handleClose}
+        dialogTitleMessage={dialogTitleMessage}
+        dialogContentMessage={dialogContentMessage}
+      />
     </MapContainer>
   )
 }

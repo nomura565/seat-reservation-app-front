@@ -25,13 +25,14 @@ code {
 .date {
   margin-right: 30px;
 }
+
 .date-input {
   width: 80px;
 }
 
 .date-input2 {
   width: 120px;
-  font-family: "Roboto","Helvetica","Arial",sans-serif;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
   font-weight: 400;
   font-size: 1rem;
   line-height: 1.4375em;
@@ -71,7 +72,7 @@ code {
 }
 
 .my-icon {
-  color:black;
+  color: black;
 }
 
 .my-button-group {
@@ -90,13 +91,14 @@ code {
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
 }
 
 .blinking {
-	animation: blinkOpacity 0.5s ease-in-out infinite alternate;
+  animation: blinkOpacity 0.5s ease-in-out infinite alternate;
 }
 
 .image {
@@ -112,6 +114,7 @@ code {
 .calendar-button {
   margin-left: 25px !important;
 }
+
 /* 隣接するカレンダ予定の偶数番目を違う色にする */
 .rbc-row-segment:has(.rbc-event):nth-of-type(2n) .rbc-event {
   background-color: #5784ab !important;
@@ -126,19 +129,19 @@ code {
 }
 
 .comment-area {
-  display:flex;
+  display: flex;
 }
 
 .reply-area {
-  display:flex;
+  display: flex;
   margin-left: 20px;
 }
 
 .reply-send-button {
-  margin-left:-60px !important;
+  margin-left: -60px !important;
   margin-top: 25px !important;
   padding: 0px !important;
-  height:25px;
+  height: 25px;
 }
 
 .reply-list-area {

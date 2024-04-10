@@ -28,17 +28,17 @@ const TemporaryDrawer = (props) => {
     <Box
       sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 250 }}
       role="presentation"
-      
+
     >
       <Divider />
       <List>
-      <FloorAndDate
-        floor={props.floor}
-        handleChange={props.handleChange}
-        floorList={props.floorList}
-        seatDate={props.seatDate}
-        dateChange={props.dateChange}
-      />
+        <FloorAndDate
+          floor={props.floor}
+          handleChange={props.handleChange}
+          floorList={props.floorList}
+          seatDate={props.seatDate}
+          dateChange={props.dateChange}
+        />
       </List>
     </Box>
   );
@@ -48,13 +48,13 @@ const TemporaryDrawer = (props) => {
   return (
     <div>
       <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={toggleDrawer(anchor, true)}
-            sx={{ mr: 1 }}
-            size="small"
-          ><MenuIcon />
+        color="inherit"
+        aria-label="open drawer"
+        edge="start"
+        onClick={toggleDrawer(anchor, true)}
+        sx={{ mr: 1 }}
+        size="small"
+      ><MenuIcon />
       </IconButton>
       <Drawer
         anchor={anchor}

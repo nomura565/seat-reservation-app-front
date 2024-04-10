@@ -9,7 +9,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { isMobile } from "react-device-detect";
-import {DATE_FORMAT} from "./Const";
+import { DATE_FORMAT } from "./Const";
 
 const MESSAGE = {
   FLOOR: "Floor"
@@ -18,7 +18,7 @@ const MESSAGE = {
 const FloorAndDate = (props) => {
   const Today = new Date();
   return (
-    <div className={isMobile ? "":"date-container"}>
+    <div className={isMobile ? "" : "date-container"}>
       <FormControl sx={{ m: 1, minWidth: 200 }} size="small">
         <InputLabel id="demo-simple-select-autowidth-label">{MESSAGE.FLOOR}</InputLabel>
         <Select
@@ -40,15 +40,17 @@ const FloorAndDate = (props) => {
         <Datetime
           locale='ja'
           inputProps={
-            {"className":"date-input2",
-              "readOnly":"readOnly"}
+            {
+              "className": "date-input2",
+              "readOnly": "readOnly"
+            }
           }
           dateFormat={DATE_FORMAT}
           timeFormat={false}
           value={props.seatDate}
           initialValue={props.seatDate}
           closeOnSelect={true}
-          onChange={selectedDate => {props.dateChange(selectedDate || Today)}}
+          onChange={selectedDate => { props.dateChange(selectedDate || Today) }}
         />
       </div>
     </div>
