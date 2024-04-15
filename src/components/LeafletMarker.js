@@ -46,6 +46,8 @@ const MESSAGE = {
   UNSEAT_TOOLTIP_TITLE: "複数日が選択されている場合、指定範囲の同じ名前の席を空席にします",
   SEAT_SCHEDULE_BUTTON: "この席の予定を確認する",
   COMMENT_REGIST_BUTTON: "コメントする",
+  DIALOG_UNSEAT_CONFIRM_TITLE: "空席登録確認",
+  DIALOG_UNSEAT_CONFIRM_DETAIL: "この座席を空席にしますか？",
 }
 
 let currentLat = null;
@@ -120,6 +122,8 @@ const LeafletMarker = (props) => {
   const [dialogTitleMessage, setDialogTitleMessage] = useState(MESSAGE.DIALOG_SEAT_REGIST_TITLE);
   //dialogのコンテントメッセージ
   const [dialogContentMessage, setDialogContentMessage] = useState("");
+  //dialogのコンテントメッセージ
+  const [isSimpleDialog, setIsSimpleDialog] = useState(true);
   //席情報等をリフレッシュするかのフラグ
   const [refreshFlg, setRefreshFlg] = useState(false);
   //固定席フラグ
@@ -168,9 +172,11 @@ const LeafletMarker = (props) => {
 
   let popupRef = useRef();
   /**dialogオープンイベント */
-  const dialogOpen = (titleText, ContextText) => {
+  const dialogOpen = (titleText, ContextText, isSimpleDialog) => {
     setDialogTitleMessage(titleText);
     setDialogContentMessage(ContextText);
+    const flg = (typeof(isSimpleDialog) === "undefined") ? true : false;
+    setIsSimpleDialog(flg);
     handleClickOpen();
   }
   /**登録成功 */
@@ -276,6 +282,10 @@ const LeafletMarker = (props) => {
 
   /**座席空席登録ボタン押下イベント */
   const onClickUnSeatRegistButton = () => {
+    dialogOpen(MESSAGE.DIALOG_UNSEAT_CONFIRM_TITLE, MESSAGE.DIALOG_UNSEAT_CONFIRM_DETAIL, false);
+  }
+  /**座席空席登録 */
+  const unSeatRegist = () => {
     //空席登録
     currentUpdateMode = UpdateMode.unseat;
 
@@ -681,6 +691,8 @@ const LeafletMarker = (props) => {
         handleClose={handleClose}
         dialogTitleMessage={dialogTitleMessage}
         dialogContentMessage={dialogContentMessage}
+        isSimpleDialog={isSimpleDialog}
+        handleOk={unSeatRegist}
       />
       <SeatCalendar
         ref={seatCalendarRef}
