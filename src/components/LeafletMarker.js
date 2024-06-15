@@ -20,6 +20,8 @@ import { formatDateToString } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
 
+const LS_KEY = "seatResavationSystemUserName";
+
 /** メッセージ */
 const MESSAGE = {
   UNSEAT: "空席",
@@ -98,7 +100,7 @@ const LeafletMarker = (props) => {
   //初期状態だとnullとなり表示にnullと出てしまうので対応
   if (name == null) {
     //クッキーに名前があればそれをdialogで使う名前にする
-    user_name = (cookies.userName !== 0) ? cookies.userName : "";
+    user_name = (localStorage.getItem(LS_KEY)) ? localStorage.getItem(LS_KEY) : "";
     flg = false;
     name = MESSAGE.UNSEAT;
   }
@@ -199,9 +201,10 @@ const LeafletMarker = (props) => {
         _text = MESSAGE.DIALOG_UNSEAT_REGIST_DETAIL_PERMANENT;
       }
     } else {
-      const cookieDate = new Date();
-      cookieDate.setDate(cookieDate.getDate() + 7);
-      setCookie("userName", userName, { expires: cookieDate, path: '/' });
+      //const cookieDate = new Date();
+      //cookieDate.setDate(cookieDate.getDate() + 7);
+      //setCookie("userName", userName, { expires: cookieDate, path: '/' });
+      localStorage.setItem(LS_KEY, userName);
     }
 
     setUserName(_userName);
@@ -299,6 +302,7 @@ const LeafletMarker = (props) => {
       seat_date: _selectedDate,
       to_date: _toDate,
       user_name: userName,
+      used_name: (localStorage.getItem(LS_KEY)) ? localStorage.getItem(LS_KEY) : ""
     }
 
     axios
