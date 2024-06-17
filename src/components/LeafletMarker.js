@@ -50,6 +50,7 @@ const MESSAGE = {
   COMMENT_REGIST_BUTTON: "コメントする",
   DIALOG_UNSEAT_CONFIRM_TITLE: "空席登録確認",
   DIALOG_UNSEAT_CONFIRM_DETAIL: "この座席を空席にしますか？",
+  DIALOG_API_FAIL_SEAT_USE: "この座席に下記の登録がすでにあるため登録できません。",
 }
 
 let currentLat = null;
@@ -177,7 +178,7 @@ const LeafletMarker = (props) => {
   const dialogOpen = (titleText, ContextText, isSimpleDialog) => {
     setDialogTitleMessage(titleText);
     setDialogContentMessage(ContextText);
-    const flg = (typeof(isSimpleDialog) === "undefined") ? true : false;
+    const flg = (typeof (isSimpleDialog) === "undefined") ? true : false;
     setIsSimpleDialog(flg);
     handleClickOpen();
   }
@@ -222,8 +223,45 @@ const LeafletMarker = (props) => {
     setRefreshFlg(true);
     dialogOpen(MESSAGE.DIALOG_API_FAIL_TITLE, MESSAGE.DIALOG_API_FAIL_DETAIL);
   }
+  /**登録失敗 */
+  const InsertFailSeatUse = (message, useSeatList) => {
+    console.log(message);
+
+    let context = MESSAGE.DIALOG_API_FAIL_SEAT_USE + "\n";
+    useSeatList.forEach(useSeat => {
+      context = context + useSeat.seat_date + ":" + useSeat.user_name + "\n"
+    });
+    context = context.split('\n').map((item, idx) => {
+      return (
+        <div key={idx}>{item}</div>
+      )
+    });
+
+
+    dialogOpen(MESSAGE.DIALOG_API_FAIL_TITLE, context);
+  }
+  /**座席使用確認 */
+  const confirmSeatUse = (_fromDate, _toDate) => {
+    return axios
+      .post(API_URL.CONFIRM_SEAT_USE, {
+        seat_id: seatId,
+        from_date: _fromDate,
+        to_date: _toDate
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          return (response.data.length == 0) ? false : response.data;
+        } else {
+          return false;
+        }
+
+      })
+      .catch((error) => {
+        return false;
+      });
+  }
   /**座席登録ボタン押下イベント */
-  const onClickSeatRegistButton = () => {
+  const onClickSeatRegistButton = async () => {
     let _fromDate = fromDate;
     let _toDate = formatToDateAndValidDate();
 
@@ -236,6 +274,13 @@ const LeafletMarker = (props) => {
     }
 
     currentUpdateMode = UpdateMode.update;
+
+    const useSeatList = await confirmSeatUse(_fromDate, _toDate);
+    if (useSeatList) {
+      InsertFailSeatUse(MESSAGE.API_RESPONSE_UNEXPECT, useSeatList);
+      return;
+    }
+
     axios
       .post(API_URL.INSERT, {
         seat_id: seatId,

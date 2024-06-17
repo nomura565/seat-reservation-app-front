@@ -11,4 +11,5 @@ export const API_URL = {
   CALENDAR: BASE_URL + "calendar",
   REPLY_SELECT: BASE_URL + "replySelect",
   REPLY_INSERT: BASE_URL + "replyInsert",
+  CONFIRM_SEAT_USE: BASE_URL + "confirmSeatUse",
 }

@@ -32,21 +32,21 @@ const LeafletDialog = (props) => {
       {props.isSimpleDialog
         ?
         <DialogActions>
-        <Button onClick={props.handleClose} autoFocus>
-          OK
-        </Button>
+          <Button onClick={props.handleClose} autoFocus>
+            OK
+          </Button>
         </DialogActions>
         :
         <DialogActions>
-        <Button onClick={props.handleClose} autoFocus>
-          CANCEL
-        </Button>
-        <Button onClick={props.handleOk} autoFocus>
-          OK
-        </Button>
+          <Button onClick={props.handleClose} autoFocus>
+            CANCEL
+          </Button>
+          <Button onClick={props.handleOk} autoFocus>
+            OK
+          </Button>
         </DialogActions>
       }
-      
+
     </Dialog>
   )
 }
