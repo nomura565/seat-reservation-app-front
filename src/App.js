@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import LeafletMain from './components/Leaflet';
-import { API_URL } from "./components/Const";
+import { API_URL, seatDateAtom } from "./components/Const";
 import { formatDateToString, parseStringToDate } from "./components/FormatDate";
 
 import "react-datetime/css/react-datetime.css";
@@ -15,6 +15,8 @@ import { Button } from "@mui/material";
 import TemporaryDrawer from './components/TemporaryDrawer';
 import { isMobile } from "react-device-detect";
 import FloorAndDate from './components/FloorAndDate';
+import CommentDrawer from './components/CommentDrawer';
+import { useAtom } from 'jotai';
 
 /** メッセージ */
 const MESSAGE = {
@@ -27,8 +29,7 @@ Leaflet.Icon.Default.imagePath =
 
 const App = () => {
   const childRef = useRef();
-  const Today = new Date();
-  const [seatDate, setSeatDate] = useState(Today);
+  const [seatDate, setSeatDate] = useAtom(seatDateAtom);
   const [floor, setFloor] = React.useState("1");
   let tmpFloorList = [];
   //管理モードパラメータ
@@ -128,6 +129,7 @@ const App = () => {
         admin={admin}
         dateChangeYmd={dateChangeYmd}
       />
+      <CommentDrawer / >
     </div>
   );
 }

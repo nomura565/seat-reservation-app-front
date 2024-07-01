@@ -6,7 +6,7 @@ import { TextField, Button, ButtonGroup, FormControlLabel, Checkbox, Tooltip as 
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
-import { API_URL, DATE_FORMAT, PERMANENT_DATE } from "./Const";
+import { API_URL, DATE_FORMAT, PERMANENT_DATE, selectCommentSeatIdAtom } from "./Const";
 import LeafletDialog from "./LeafletDialog";
 import { useCookies } from "react-cookie";
 import Resizer from "react-image-file-resizer";
@@ -19,6 +19,7 @@ import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
 import { formatDateToString } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
+import { useAtomValue } from 'jotai';
 
 const LS_KEY = "seatResavationSystemUserName";
 
@@ -57,29 +58,37 @@ let currentLat = null;
 let currentLng = null;
 
 const LeafletMarker = (props) => {
+  const selectCommentSeatId= useAtomValue(selectCommentSeatIdAtom);
+  //席ID
+  const [seatId, setSeatId] = useState(props.seatId);
   //使用中アイコン
+  let iconClass = props.iconClass;
+  if(selectCommentSeatId === seatId){
+    iconClass = "blinking";
+  }
+
   const occupyIcon = new icon({
     iconUrl: 'occupy.png',
     iconSize: [25, 25], // size of the icon
-    className: props.iconClass
+    className: iconClass
   });
   //固定席アイコン
   const permanentIcon = new icon({
     iconUrl: 'permanent.png',
     iconSize: [25, 25], // size of the icon
-    className: props.iconClass
+    className: iconClass
   });
   //追加席アイコン
   const addIcon = new icon({
     iconUrl: 'add.png',
     iconSize: [25, 25], // size of the icon
-    className: props.iconClass
+    className: iconClass
   });
   //自由席アイコン
   const freeIcon = new icon({
     iconUrl: 'free.png',
     iconSize: [14, 25], // size of the icon
-    className: props.iconClass
+    className: iconClass
   });
 
   /** 更新モード */
@@ -117,8 +126,6 @@ const LeafletMarker = (props) => {
   const [popupText, setPopupText] = useState(name);
   //席が使用中かのフラグ
   const [useSeatFlg, setUseSeatFlg] = useState(flg);
-  //席ID
-  const [seatId, setSeatId] = useState(props.seatId);
 
   const [open, setOpen] = useState(false);
   //dialogのタイトルメッセージ

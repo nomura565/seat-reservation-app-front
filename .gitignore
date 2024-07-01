@@ -23,3 +23,5 @@ yarn-debug.log*
 yarn-error.log*
 残課題.md
 public/bk
+.env.development
+.env.production

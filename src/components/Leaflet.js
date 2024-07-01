@@ -1,9 +1,9 @@
 import { LatLng, LatLngBounds, CRS } from 'leaflet';
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
-import { MapContainer, TileLayer, ImageOverlay, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, ImageOverlay } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import { API_URL, PERMANENT_DATE } from "./Const";
+import { API_URL, PERMANENT_DATE, commentDrawerOpenAtom, commentListAtom } from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -11,6 +11,9 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { Button, ButtonGroup } from "@mui/material";
 import LeafletDialog from "./LeafletDialog";
 import { formatDateToString } from "./FormatDate";
+import ChatIcon from '@mui/icons-material/Chat';
+import { useSetAtom, useAtomValue } from 'jotai';
+import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
 
 /** メッセージ */
 const MESSAGE = {
@@ -67,6 +70,10 @@ const LeafletMain = (props, ref) => {
   const [iconClass, setIconClass] = useState("");
   //追加した席のカウント　管理モードで席追加ボタンを押下で+1
   const [addSeatCount, setAddSeatCount] = useState(1);
+  //コメントドロアーオープン
+  const setCommentDrawerOpen = useSetAtom(commentDrawerOpenAtom);
+  //コメントリスト
+  const commentList = useAtomValue(commentListAtom);
 
   /** 席日付の取得　LeafletMarker.jsからの参照用 */
   const getselectedDate = () => {
@@ -109,6 +116,11 @@ const LeafletMain = (props, ref) => {
     setTooltipPermanent(!tooltipPermanent);
     setSeatList([]);
     getCurrentSeatList();
+  }
+  /** コメントボタンクリックイベント */
+  const onClickCommentButton = () => {
+    if(commentList.length > 0) setCommentDrawerOpen(true);
+    
   }
   /** 席削除ボタンクリックイベント　席アイコンを点滅状態にする */
   const onClickDeleteButton = () => {
@@ -297,7 +309,20 @@ const LeafletMain = (props, ref) => {
             onClick={onClickDeleteButton}>
             <DeleteForeverIcon className="my-icon" />
           </Button>
-          : ""
+          : 
+          <Button
+            variant="outlined"
+            size="small"
+            className="my-button my-badge-button"
+            onClick={onClickCommentButton}>
+            {commentList.length > 0
+            ?
+            <MarkUnreadChatAltIcon sx={{ color:"#44b700" }} className="my-icon rippleIcon" />
+            :
+            <ChatIcon className="my-icon" />
+            }
+            
+          </Button>
         }
       </ButtonGroup>
       <TileLayer
