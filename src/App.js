@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import LeafletMain from './components/Leaflet';
-import { API_URL, seatDateAtom } from "./components/Const";
+import { API_URL, selectSeatDateAtom, selectFloorAtom, floorListAtom } from "./components/Const";
 import { formatDateToString, parseStringToDate } from "./components/FormatDate";
 
 import "react-datetime/css/react-datetime.css";
@@ -29,15 +29,15 @@ Leaflet.Icon.Default.imagePath =
 
 const App = () => {
   const childRef = useRef();
-  const [seatDate, setSeatDate] = useAtom(seatDateAtom);
-  const [floor, setFloor] = React.useState("1");
+  const [selectSeatDate, setSelectSeatDate] = useAtom(selectSeatDateAtom);
+  const [selectFloor, setSelectFloor] = useAtom(selectFloorAtom);
   let tmpFloorList = [];
   //管理モードパラメータ
   const [searchParams, setSearchParams] = useSearchParams();
   const paramAdmin = searchParams.get('admin');
   const [admin, setAdmin] = useState((paramAdmin === null) ? false : paramAdmin);
 
-  const [floorList, setFloorList] = useState(tmpFloorList);
+  const [floorList, setFloorList] = useAtom(floorListAtom);
 
   useEffect(() => {
     //読み込み時オフィス一覧を取得する
@@ -54,21 +54,21 @@ const App = () => {
   }
   /** オフィス変更イベント */
   const handleChange = (e) => {
-    setFloor(e.target.value);
+    setSelectFloor(e.target.value);
 
     let temp = floorList.find(floor => floor["floor_id"] === e.target.value);
     //Leaflet.jsの処理呼び出し
     //オフィス画像をセット
     childRef.current.setFloorMapFromParent(temp["floor_map"]);
     //席一覧を取得
-    childRef.current.changeSeatList(seatDate, e.target.value);
+    childRef.current.changeSeatList(selectSeatDate, e.target.value);
   };
   /** 席日付変更イベント */
-  const dateChange = (selectedDate) => {
+  const dateChange = (seatDate) => {
     try {
-      let date = formatDateToString(selectedDate);
-      setSeatDate(date);
-      childRef.current.changeSeatList(selectedDate, floor);
+      let date = formatDateToString(seatDate);
+      setSelectSeatDate(date);
+      childRef.current.changeSeatList(seatDate, selectFloor);
     } catch {
       console.log(MESSAGE.ILLEGAL_DATE);
     }
@@ -76,16 +76,12 @@ const App = () => {
 
   /** 指定日付での席一覧取得 */
   const dateChangeYmd = (dateYmd) => {
-    setSeatDate(dateYmd);
-    childRef.current.changeSeatList(parseStringToDate(dateYmd), floor);
+    setSelectSeatDate(dateYmd);
+    childRef.current.changeSeatList(parseStringToDate(dateYmd), selectFloor);
   }
 
   const getSeatDate = () => {
-    return seatDate;
-  }
-
-  const getFloor = () => {
-    return floor;
+    return selectSeatDate;
   }
 
   /** 座席位置登録ボタン押下イベント */
@@ -98,19 +94,14 @@ const App = () => {
       {isMobile
         ?
         <TemporaryDrawer
-          floor={floor}
+          floor={selectFloor}
           handleChange={handleChange}
-          floorList={floorList}
-          seatDate={seatDate}
           dateChange={dateChange}
         />
         :
         <div className='date-container'>
           <FloorAndDate
-            floor={floor}
             handleChange={handleChange}
-            floorList={floorList}
-            seatDate={seatDate}
             dateChange={dateChange}
           />
           {admin
@@ -122,10 +113,8 @@ const App = () => {
       }
       <LeafletMain
         ref={childRef}
-        seatDate={seatDate}
-        floor={floor}
+        seatDate={selectSeatDate}
         getSeatDate={getSeatDate}
-        getFloor={getFloor}
         admin={admin}
         dateChangeYmd={dateChangeYmd}
       />

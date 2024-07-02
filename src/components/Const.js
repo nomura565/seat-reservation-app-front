@@ -3,8 +3,11 @@ import { formatDateToString } from "./FormatDate";
 
 export const commentDrawerOpenAtom = atom(false);
 export const commentListAtom = atom([]);
-export const seatDateAtom = atom(formatDateToString(new Date()));
+export const selectSeatDateAtom = atom(formatDateToString(new Date()));
 export const selectCommentSeatIdAtom = atom("");
+export const selectFloorAtom = atom("1");
+export const floorListAtom = atom([]);
+export const commentListInitAtom = atom(0);
 
 export const DATE_FORMAT = "yyyy/MM/DD";
 export const PERMANENT_DATE = "XXXX/XX/XX";

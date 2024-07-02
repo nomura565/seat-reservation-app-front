@@ -33,10 +33,7 @@ const TemporaryDrawer = (props) => {
       <Divider />
       <List>
         <FloorAndDate
-          floor={props.floor}
           handleChange={props.handleChange}
-          floorList={props.floorList}
-          seatDate={props.seatDate}
           dateChange={props.dateChange}
         />
       </List>

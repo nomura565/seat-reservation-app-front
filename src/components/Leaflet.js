@@ -3,7 +3,7 @@ import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'rea
 import { MapContainer, TileLayer, ImageOverlay } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import { API_URL, PERMANENT_DATE, commentDrawerOpenAtom, commentListAtom } from "./Const";
+import { API_URL, PERMANENT_DATE, commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom } from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -12,7 +12,7 @@ import { Button, ButtonGroup } from "@mui/material";
 import LeafletDialog from "./LeafletDialog";
 import { formatDateToString } from "./FormatDate";
 import ChatIcon from '@mui/icons-material/Chat';
-import { useSetAtom, useAtomValue } from 'jotai';
+import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
 
 /** メッセージ */
@@ -37,8 +37,8 @@ function LocationMarker() {
 const LeafletMain = (props, ref) => {
 
   const [map, setMap] = useState();
-  //App.jsから渡ってくるセレクトボックスの席日付
-  const [seatDate, setSeatDate] = useState(props.seatDate);
+  //セレクトボックスの席日付
+  const [selectSeatDate, setSelectSeatDate] = useAtom(selectSeatDateAtom);
   //オフィス画像の初期値
   const [floorMap, setFloorMap] = useState("office.png");
   //leafletの中心座標
@@ -75,14 +75,16 @@ const LeafletMain = (props, ref) => {
   //コメントリスト
   const commentList = useAtomValue(commentListAtom);
 
+  const selectFloor = useAtomValue(selectFloorAtom);
+
   /** 席日付の取得　LeafletMarker.jsからの参照用 */
   const getselectedDate = () => {
-    return seatDate;
+    //return seatDate;
   }
 
   /** 現在のセレクトボックスの値から席一覧を取得する　LeafletMarker.jsからも参照 */
   const getCurrentSeatList = () => {
-    return getSeatList(props.getSeatDate(), props.getFloor());
+    return getSeatList(selectSeatDate, selectFloor);
   }
 
   /** 席一覧を取得する */
@@ -92,7 +94,7 @@ const LeafletMain = (props, ref) => {
     }
     setAddSeatCount(1);
     let _selectedDate = formatDateToString(date);
-    setSeatDate(date);
+    setSelectSeatDate(_selectedDate);
     axios
       .post(API_URL.SELECT, {
         seat_date: _selectedDate,
@@ -180,8 +182,8 @@ const LeafletMain = (props, ref) => {
   }
   //読み込み時の処理
   useEffect(() => {
-    getSeatList(props.seatDate, props.floor);
-  }, [props.seatDate, props.floor])
+    getSeatList(selectSeatDate, selectFloor);
+  }, [selectSeatDate, props.floor])
   //呼び出し元からの参照
   useImperativeHandle(ref, () => ({
     /** App.jsで席日付が変更されたときに呼ばれる　席一覧を取得する */
@@ -230,7 +232,7 @@ const LeafletMain = (props, ref) => {
   const handleClickOpen = () => {
     axios
       .post(API_URL.UPDATE, {
-        floor_id: props.getFloor(),
+        floor_id: selectFloor,
         seat_list: seatList
       })
       .then((response) => {
@@ -345,7 +347,6 @@ const LeafletMain = (props, ref) => {
             seatDate={seat.seat_date}
             tooltipDirection={seat.tooltip_direction}
             isPermanent={(seat.seat_date === PERMANENT_DATE) ? true : false}
-            getSelectedDate={getselectedDate}
             getCurrentSeatList={getCurrentSeatList}
             tooltipPermanent={tooltipPermanent}
             admin={props.admin}

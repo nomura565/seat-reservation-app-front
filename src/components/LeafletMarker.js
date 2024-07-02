@@ -6,7 +6,7 @@ import { TextField, Button, ButtonGroup, FormControlLabel, Checkbox, Tooltip as 
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
-import { API_URL, DATE_FORMAT, PERMANENT_DATE, selectCommentSeatIdAtom } from "./Const";
+import { API_URL, DATE_FORMAT, PERMANENT_DATE, selectCommentSeatIdAtom, selectSeatDateAtom, commentListInitAtom } from "./Const";
 import LeafletDialog from "./LeafletDialog";
 import { useCookies } from "react-cookie";
 import Resizer from "react-image-file-resizer";
@@ -19,7 +19,7 @@ import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
 import { formatDateToString } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
-import { useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 const LS_KEY = "seatResavationSystemUserName";
 
@@ -59,6 +59,8 @@ let currentLng = null;
 
 const LeafletMarker = (props) => {
   const selectCommentSeatId= useAtomValue(selectCommentSeatIdAtom);
+  const selectSeatDate = useAtomValue(selectSeatDateAtom);
+  const setCommentListInit = useSetAtom(commentListInitAtom);
   //席ID
   const [seatId, setSeatId] = useState(props.seatId);
   //使用中アイコン
@@ -118,7 +120,7 @@ const LeafletMarker = (props) => {
   const unUseClassName = "unuse";
 
   const [userName, setUserName] = useState(user_name);
-  const [fromDate, setFromDate] = useState(formatDateToString(props.getSelectedDate()));
+  const [fromDate, setFromDate] = useState(formatDateToString(selectSeatDate));
   const [toDate, setToDate] = useState(Today);
   //dialogで使う名前　入力して登録せず閉じたときに元に戻す用
   const [defaultUserName, setDefaultUserName] = useState(user_name);
@@ -195,7 +197,7 @@ const LeafletMarker = (props) => {
     let _toDate = formatDateToString(toDate);
     let _userName = userName;
     let _popupText = userName;
-    let _tmpDate = props.getSelectedDate();
+    let _tmpDate = selectSeatDate;
     let _title = MESSAGE.DIALOG_SEAT_REGIST_TITLE;
     let _text = format(MESSAGE.DIALOG_SEAT_REGIST_DETAIL, userName, _fromDate, _toDate);
     if (permanentFlg) _text = format(MESSAGE.DIALOG_PERMANENT_SEAT_REGIST_DETAIL, userName);
@@ -223,6 +225,7 @@ const LeafletMarker = (props) => {
     dialogOpen(_title, _text);
     setUseSeatFlg(!unseatFlg);
     setRefreshFlg(true);
+    setCommentListInit((prevCount) => prevCount + 1);
   }
   /**登録失敗 */
   const InsertFail = (message) => {
@@ -344,7 +347,7 @@ const LeafletMarker = (props) => {
     //空席登録
     currentUpdateMode = UpdateMode.unseat;
 
-    let _selectedDate = formatDateToString(props.getSelectedDate());
+    let _selectedDate = formatDateToString(selectSeatDate);
     let _toDate = formatToDateAndValidDate();
 
     if (_toDate == null) return;
@@ -441,7 +444,7 @@ const LeafletMarker = (props) => {
   const mapEvents = useMapEvents({
     popupopen(e) {
       currentUpdateMode = UpdateMode.default;
-      let _tmpDate = props.getSelectedDate();
+      let _tmpDate = selectSeatDate;
       setFromDate(formatDateToString(_tmpDate));
       setToDate(_tmpDate);
       setImageData(null);
@@ -451,7 +454,7 @@ const LeafletMarker = (props) => {
     popupclose(e) {
       if (currentUpdateMode === UpdateMode.default) {
         setUserName(defaultUserName);
-        let tmpDate = props.getSelectedDate();
+        let tmpDate = selectSeatDate;
         setFromDate(formatDateToString(tmpDate));
         setToDate(tmpDate);
       } else {
@@ -527,10 +530,9 @@ const LeafletMarker = (props) => {
       dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_REPLY_EMPTY);
       return;
     }
-    const _seatDate = (props.isPermanent) ? PERMANENT_DATE : formatDateToString(props.getSelectedDate());
     axios
       .post(API_URL.REPLY_INSERT, {
-        seat_date: _seatDate,
+        seat_date: formatDateToString(selectSeatDate),
         seat_id: seatId,
         comment: replyComment
       })
@@ -538,6 +540,7 @@ const LeafletMarker = (props) => {
         if (response.status === 200) {
           getReplyList(false);
           setReplyComment("");
+          setCommentListInit((prevCount) => prevCount + 1);
         } else {
           InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
           return;
@@ -553,10 +556,9 @@ const LeafletMarker = (props) => {
   /**リプライ一覧取得 */
   const getReplyList = (LatlngAdjustFlg) => {
     setReplyList([]);
-    const _seatDate = (props.isPermanent) ? PERMANENT_DATE : fromDate;
     axios
       .post(API_URL.REPLY_SELECT, {
-        seat_date: _seatDate,
+        seat_date: formatDateToString(selectSeatDate),
         seat_id: seatId
       })
       .then((response) => {

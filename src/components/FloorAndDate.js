@@ -9,7 +9,8 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import { isMobile } from "react-device-detect";
-import { DATE_FORMAT } from "./Const";
+import { DATE_FORMAT, selectFloorAtom, selectSeatDateAtom, floorListAtom } from "./Const";
+import { useAtomValue } from 'jotai';
 
 const MESSAGE = {
   FLOOR: "Floor"
@@ -17,6 +18,9 @@ const MESSAGE = {
 
 const FloorAndDate = (props) => {
   const Today = new Date();
+  const selectFloor = useAtomValue(selectFloorAtom);
+  const selectSeatDate = useAtomValue(selectSeatDateAtom);
+  const floorList = useAtomValue(floorListAtom);
   return (
     <div className={isMobile ? "" : "date-container"}>
       <FormControl sx={{ m: 1, minWidth: 200 }} size="small">
@@ -24,12 +28,12 @@ const FloorAndDate = (props) => {
         <Select
           labelId="demo-simple-select-autowidth-label"
           id="demo-simple-select-autowidth"
-          value={props.floor}
+          value={selectFloor}
           onChange={props.handleChange}
           autoWidth
           label={MESSAGE.FLOOR}
         >
-          {props.floorList.map((floor) => {
+          {floorList.map((floor) => {
             return (<MenuItem key={floor.key} value={floor.floor_id}>
               {floor.floor_name}
             </MenuItem>)
@@ -47,8 +51,8 @@ const FloorAndDate = (props) => {
           }
           dateFormat={DATE_FORMAT}
           timeFormat={false}
-          value={props.seatDate}
-          initialValue={props.seatDate}
+          value={selectSeatDate}
+          initialValue={selectSeatDate}
           closeOnSelect={true}
           onChange={selectedDate => { props.dateChange(selectedDate || Today) }}
         />

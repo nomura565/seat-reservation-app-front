@@ -8,7 +8,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
-import { API_URL, commentDrawerOpenAtom, seatDateAtom, commentListAtom, selectCommentSeatIdAtom } from "./Const";
+import { API_URL, commentDrawerOpenAtom, selectSeatDateAtom, commentListAtom, selectCommentSeatIdAtom, selectFloorAtom, commentListInitAtom } from "./Const";
 import axios from "axios";
 import Collapse from '@mui/material/Collapse';
 import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
@@ -22,13 +22,15 @@ const MESSAGE = {
 
 const CommentDrawer = (props) => {
   const [commentDrawerOpen, setCommentDrawerOpen] = useAtom(commentDrawerOpenAtom);
+  const commentListInit = useAtomValue(commentListInitAtom);
   const [commentList, setCommentList] = useAtom(commentListAtom);
-  const seatDate = useAtomValue(seatDateAtom);
+  const selectSeatDate = useAtomValue(selectSeatDateAtom);
   const setSelectCommentSeatId = useSetAtom(selectCommentSeatIdAtom);
+  const selectFloor = useAtomValue(selectFloorAtom);
 
   useEffect(() => {
     commentSelect();
-  }, [seatDate]);
+  }, [selectSeatDate, selectFloor, commentListInit]);
 
   useEffect(() => {
     setSelectCommentSeatId("");
@@ -39,7 +41,8 @@ const CommentDrawer = (props) => {
     setCommentList([]);
     return axios
       .post(API_URL.COMMENT_SELECT, {
-        seat_date: seatDate
+        seat_date: selectSeatDate,
+        floor_id: selectFloor
       })
       .then((response) => {
         if (response.status === 200) {
