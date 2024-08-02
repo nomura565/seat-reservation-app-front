@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import LeafletMain from './components/Leaflet';
-import { API_URL, selectSeatDateAtom, selectFloorAtom, floorListAtom } from "./components/Const";
+import { API_URL, selectSeatDateAtom, selectFloorAtom, floorListAtom, isLoadingAtom } from "./components/Const";
 import { formatDateToString, parseStringToDate } from "./components/FormatDate";
 
 import "react-datetime/css/react-datetime.css";
@@ -16,7 +16,9 @@ import TemporaryDrawer from './components/TemporaryDrawer';
 import { isMobile } from "react-device-detect";
 import FloorAndDate from './components/FloorAndDate';
 import CommentDrawer from './components/CommentDrawer';
-import { useAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
+import FacilitySchedule from './components/FacilitySchedule';
+import Progress from './components/Progress';
 
 /** メッセージ */
 const MESSAGE = {
@@ -38,6 +40,7 @@ const App = () => {
   const [admin, setAdmin] = useState((paramAdmin === null) ? false : paramAdmin);
 
   const [floorList, setFloorList] = useAtom(floorListAtom);
+  const setIsLoading = useSetAtom(isLoadingAtom);
 
   useEffect(() => {
     //読み込み時オフィス一覧を取得する
@@ -46,9 +49,11 @@ const App = () => {
 
   /** オフィス一覧を取得 */
   const getFloorList = () => {
+    setIsLoading(true);
     axios
       .get(API_URL.FLOOR)
       .then((response) => {
+        setIsLoading(false);
         setFloorList(response.data);
       });
   }
@@ -119,6 +124,8 @@ const App = () => {
         dateChangeYmd={dateChangeYmd}
       />
       <CommentDrawer / >
+      <FacilitySchedule />
+      <Progress />
     </div>
   );
 }

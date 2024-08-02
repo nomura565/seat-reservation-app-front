@@ -6,9 +6,8 @@ import { TextField, Button, ButtonGroup, FormControlLabel, Checkbox, Tooltip as 
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
-import { API_URL, DATE_FORMAT, PERMANENT_DATE, selectCommentSeatIdAtom, selectSeatDateAtom, commentListInitAtom } from "./Const";
+import { API_URL, DATE_FORMAT, selectCommentSeatIdAtom, selectSeatDateAtom, commentListInitAtom, isLoadingAtom } from "./Const";
 import LeafletDialog from "./LeafletDialog";
-import { useCookies } from "react-cookie";
 import Resizer from "react-image-file-resizer";
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
 import ChairAltIcon from '@mui/icons-material/ChairAlt';
@@ -19,7 +18,7 @@ import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
 import { formatDateToString } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 
 const LS_KEY = "seatResavationSystemUserName";
 
@@ -62,7 +61,8 @@ const LeafletMarker = (props) => {
   const selectSeatDate = useAtomValue(selectSeatDateAtom);
   const setCommentListInit = useSetAtom(commentListInitAtom);
   //席ID
-  const [seatId, setSeatId] = useState(props.seatId);
+  const [seatId] = useState(props.seatId);
+  const setIsLoading = useSetAtom(isLoadingAtom);
   //使用中アイコン
   let iconClass = props.iconClass;
   if(selectCommentSeatId === seatId){
@@ -108,7 +108,6 @@ const LeafletMarker = (props) => {
   let name = props.userName;
   //toolipで使う名前
   let user_name = props.userName;
-  const [cookies, setCookie, removeCookie] = useCookies();
   //初期状態だとnullとなり表示にnullと出てしまうので対応
   if (name == null) {
     //クッキーに名前があればそれをdialogで使う名前にする
@@ -145,11 +144,11 @@ const LeafletMarker = (props) => {
   if (tooltip_direction == null) {
     tooltip_direction = "auto";
   }
-  const [tooltipDirection, setTooltipDirection] = useState(tooltip_direction);
+  const [tooltipDirection] = useState(tooltip_direction);
   //席の位置座標
   const [position, setPosition] = useState(props.position);
   //管理モードかのフラグ
-  const [admin, setAdmin] = useState(props.admin);
+  const [admin] = useState(props.admin);
   //アイコン
   const [imageData, setImageData] = useState(null);
   //ポップアップオープンフラグ
@@ -211,9 +210,6 @@ const LeafletMarker = (props) => {
         _text = MESSAGE.DIALOG_UNSEAT_REGIST_DETAIL_PERMANENT;
       }
     } else {
-      //const cookieDate = new Date();
-      //cookieDate.setDate(cookieDate.getDate() + 7);
-      //setCookie("userName", userName, { expires: cookieDate, path: '/' });
       localStorage.setItem(LS_KEY, userName);
     }
 
@@ -260,7 +256,7 @@ const LeafletMarker = (props) => {
       })
       .then((response) => {
         if (response.status === 200) {
-          return (response.data.length == 0) ? false : response.data;
+          return (response.data.length === 0) ? false : response.data;
         } else {
           return false;
         }
@@ -290,7 +286,7 @@ const LeafletMarker = (props) => {
       InsertFailSeatUse(MESSAGE.API_RESPONSE_UNEXPECT, useSeatList);
       return;
     }
-
+    setIsLoading(true);
     axios
       .post(API_URL.INSERT, {
         seat_id: seatId,
@@ -302,6 +298,7 @@ const LeafletMarker = (props) => {
         comment: comment
       })
       .then((response) => {
+        setIsLoading(false);
         if (response.status === 200) {
           InsertSuccsess(false);
         } else {
@@ -311,6 +308,7 @@ const LeafletMarker = (props) => {
 
       })
       .catch((error) => {
+        setIsLoading(false);
         InsertFail(error.message);
         return;
       });
@@ -359,12 +357,13 @@ const LeafletMarker = (props) => {
       user_name: userName,
       used_name: (localStorage.getItem(LS_KEY)) ? localStorage.getItem(LS_KEY) : ""
     }
-
+    setIsLoading(true);
     axios
       .delete(API_URL.DELETE, {
         data: sendData
       })
       .then((response) => {
+        setIsLoading(false);
         if (response.status === 204) {
           InsertSuccsess(true);
         } else {
@@ -374,6 +373,7 @@ const LeafletMarker = (props) => {
 
       })
       .catch((error) => {
+        setIsLoading(false);
         InsertFail(error.message);
         return;
       });
@@ -530,6 +530,7 @@ const LeafletMarker = (props) => {
       dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_REPLY_EMPTY);
       return;
     }
+    setIsLoading(true);
     axios
       .post(API_URL.REPLY_INSERT, {
         seat_date: formatDateToString(selectSeatDate),
@@ -537,6 +538,7 @@ const LeafletMarker = (props) => {
         comment: replyComment
       })
       .then((response) => {
+        setIsLoading(false);
         if (response.status === 200) {
           getReplyList(false);
           setReplyComment("");
@@ -548,6 +550,7 @@ const LeafletMarker = (props) => {
 
       })
       .catch((error) => {
+        setIsLoading(false);
         InsertFail(error.message);
         return;
       });
@@ -556,12 +559,14 @@ const LeafletMarker = (props) => {
   /**リプライ一覧取得 */
   const getReplyList = (LatlngAdjustFlg) => {
     setReplyList([]);
+    setIsLoading(true);
     axios
       .post(API_URL.REPLY_SELECT, {
         seat_date: formatDateToString(selectSeatDate),
         seat_id: seatId
       })
       .then((response) => {
+        setIsLoading(false);
         setReplyList(response.data);
         if (LatlngAdjustFlg) {
           //ポップアップ表示位置の調整
@@ -576,7 +581,7 @@ const LeafletMarker = (props) => {
             if (props.registedComment !== null) {
               _adjustLat = _adjustLat + 60;
             }
-            if (response.data.length == 1) {
+            if (response.data.length === 1) {
               _adjustLat = _adjustLat + 60;
             }
             if (response.data.length >= 2) {
@@ -623,12 +628,12 @@ const LeafletMarker = (props) => {
                   onChange={(e) => onFileChange(e)}
                 />
                 <div>
-                  <img src={imageData} />
+                  {imageData != null && (<img src={imageData} alt="tmp_icon" />)}
                 </div>
               </div>
             </div>
             <div className={useSeatFlg ? "image" : unUseClassName}>
-              <img src={props.image} />
+              {props.image != null && (<img src={props.image} alt="icon" />)}
             </div>
             <div>
               <TextField
@@ -720,16 +725,17 @@ const LeafletMarker = (props) => {
                 <FormControlLabel required control={<Checkbox checked={permanentFlg} onChange={handleChange} size="small" />} label={MESSAGE.PARMANENT} />
               </MaterialTooltip>
             </div>
-            <div><ButtonGroup size="small" aria-label="small button group">
-              <div className={useSeatFlg ? unUseClassName : ""}>
-                <Button startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
-              </div>
-              <div className={useSeatFlg ? "" : unUseClassName}>
-                <MaterialTooltip placement="right" title={props.isPermanent ? "" : MESSAGE.UNSEAT_TOOLTIP_TITLE}>
-                  <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
-                </MaterialTooltip>
-              </div>
-            </ButtonGroup>
+            <div>
+              <ButtonGroup size="small" aria-label="small button group">
+                <div className={useSeatFlg ? unUseClassName : ""}>
+                  <Button startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
+                </div>
+                <div className={useSeatFlg ? "" : unUseClassName}>
+                  <MaterialTooltip placement="right" title={props.isPermanent ? "" : MESSAGE.UNSEAT_TOOLTIP_TITLE}>
+                    <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
+                  </MaterialTooltip>
+                </div>
+              </ButtonGroup>
               {!props.isPermanent
                 ?
                 <MaterialTooltip placement="right" title={MESSAGE.SEAT_SCHEDULE_BUTTON}>

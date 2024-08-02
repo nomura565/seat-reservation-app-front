@@ -3,7 +3,7 @@ import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'rea
 import { MapContainer, TileLayer, ImageOverlay } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import { API_URL, PERMANENT_DATE, commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom } from "./Const";
+import { API_URL, PERMANENT_DATE, commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom, facilityScheduleOpenAtom, isLoadingAtom } from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -14,6 +14,8 @@ import { formatDateToString } from "./FormatDate";
 import ChatIcon from '@mui/icons-material/Chat';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
+import LeafletMarkerFacility from './LeafletMarkerFacility';
+
 
 /** メッセージ */
 const MESSAGE = {
@@ -77,10 +79,7 @@ const LeafletMain = (props, ref) => {
 
   const selectFloor = useAtomValue(selectFloorAtom);
 
-  /** 席日付の取得　LeafletMarker.jsからの参照用 */
-  const getselectedDate = () => {
-    //return seatDate;
-  }
+  const setIsLoading = useSetAtom(isLoadingAtom);
 
   /** 現在のセレクトボックスの値から席一覧を取得する　LeafletMarker.jsからも参照 */
   const getCurrentSeatList = () => {
@@ -89,6 +88,7 @@ const LeafletMain = (props, ref) => {
 
   /** 席一覧を取得する */
   const getSeatList = (date, floor) => {
+    setIsLoading(true);
     if (map !== undefined) {
       map.closePopup();
     }
@@ -101,6 +101,7 @@ const LeafletMain = (props, ref) => {
         floor_id: floor
       })
       .then((response) => {
+        setIsLoading(false);
         setSeatList(response.data);
         setDeleteMode(false);
         setIconClass("");
@@ -151,7 +152,9 @@ const LeafletMain = (props, ref) => {
       position: [350, 15],
       user_name: "",
       tooltip_direction: "",
-      seat_date: "add"
+      seat_date: "add",
+      facility_flg: 0,
+      facility_id: null,
     }
     //配列の最後に追加
     _temp = [...seatList, addSeat];
@@ -230,12 +233,14 @@ const LeafletMain = (props, ref) => {
   }
   /** 席情報を更新 */
   const handleClickOpen = () => {
+    setIsLoading(true);
     axios
       .post(API_URL.UPDATE, {
         floor_id: selectFloor,
         seat_list: seatList
       })
       .then((response) => {
+        setIsLoading(false);
         if (response.status === 200) {
           InsertSuccess();
         } else {
@@ -245,6 +250,7 @@ const LeafletMain = (props, ref) => {
 
       })
       .catch((error) => {
+        setIsLoading(false);
         InsertFail(error.message);
         return;
       });
@@ -337,30 +343,46 @@ const LeafletMain = (props, ref) => {
         zIndex={10}
       />
       {seatList.map((seat) => {
-        return (
-          <LeafletMarker
-            map={map}
-            key={seat.key}
-            position={seat.position}
-            seatId={seat.seat_id}
-            userName={seat.user_name}
-            seatDate={seat.seat_date}
-            tooltipDirection={seat.tooltip_direction}
-            isPermanent={(seat.seat_date === PERMANENT_DATE) ? true : false}
-            getCurrentSeatList={getCurrentSeatList}
-            tooltipPermanent={tooltipPermanent}
-            admin={props.admin}
-            setPositionForSeatList={setPositionForSeatList}
-            iconClass={iconClass}
-            markerDelete={markerDelete}
-            image={(seat.image_data !== null) ? seat.image_data : null}
-            dateChangeYmd={props.dateChangeYmd}
-            registedComment={seat.comment}
-          />
-        );
+        if(seat.facility_flg){
+          return (
+            <LeafletMarkerFacility
+              map={map}
+              key={seat.key}
+              facilityId={seat.facility_id}
+              seatId={seat.seat_id}
+              tooltipDirection={seat.tooltip_direction}
+              admin={props.admin}
+              position={seat.position}
+              iconClass={iconClass}
+            />
+          );
+        } else {
+          return (
+            <LeafletMarker
+              map={map}
+              key={seat.key}
+              position={seat.position}
+              seatId={seat.seat_id}
+              userName={seat.user_name}
+              seatDate={seat.seat_date}
+              tooltipDirection={seat.tooltip_direction}
+              isPermanent={(seat.seat_date === PERMANENT_DATE) ? true : false}
+              getCurrentSeatList={getCurrentSeatList}
+              tooltipPermanent={tooltipPermanent}
+              admin={props.admin}
+              setPositionForSeatList={setPositionForSeatList}
+              iconClass={iconClass}
+              markerDelete={markerDelete}
+              image={(seat.image_data !== null) ? seat.image_data : null}
+              dateChangeYmd={props.dateChangeYmd}
+              registedComment={seat.comment}
+            />
+          );
+        }
       })}
       <LeafletDialog
         open={open}
+        isSimpleDialog={true}
         handleClose={handleClose}
         dialogTitleMessage={dialogTitleMessage}
         dialogContentMessage={dialogContentMessage}

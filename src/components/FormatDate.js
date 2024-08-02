@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns";
+import { format, parse, parseISO } from "date-fns";
 import ja from 'date-fns/locale/ja';
 
 const DATE_FORMAT = "yyyy/MM/dd";
@@ -30,6 +30,14 @@ export const parseStringToYM = (stringDate) => {
 /** 文字列→yyyy/MM/ddのDateに変換する */
 export const parseStringToDate = (stringDate) => {
   return parse(stringDate, DATE_FORMAT, new Date());
+}
+/** 文字列→ISODateに変換する */
+export const parseStringToISODate = (stringDate) => {
+  return parseISO(stringDate);
+}
+/** 文字列→9時固定のDateに変換する */
+export const parseStringToNineHours = (stringDate) => {
+  return parse(stringDate + " 09:00:00", 'yyyy/MM/dd HH:mm:ss', new Date());
 }
 
 /** 文字列→日を加算したyyyy/MM/ddの文字列に変換する */

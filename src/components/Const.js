@@ -8,6 +8,9 @@ export const selectCommentSeatIdAtom = atom("");
 export const selectFloorAtom = atom("1");
 export const floorListAtom = atom([]);
 export const commentListInitAtom = atom(0);
+export const facilityScheduleOpenAtom = atom(false);
+export const selectFacilityIdAtom = atom(null);
+export const isLoadingAtom = atom(false);
 
 export const DATE_FORMAT = "yyyy/MM/DD";
 export const PERMANENT_DATE = "XXXX/XX/XX";
@@ -23,4 +26,5 @@ export const API_URL = {
   REPLY_INSERT: process.env.REACT_APP_BASE_URL + "replyInsert",
   CONFIRM_SEAT_USE: process.env.REACT_APP_BASE_URL + "confirmSeatUse",
   COMMENT_SELECT: process.env.REACT_APP_BASE_URL + "commentSelect",
+  GAROON_SCHEDULE_SELECT: process.env.REACT_APP_BASE_URL + "garoonScheduleSelect",
 }

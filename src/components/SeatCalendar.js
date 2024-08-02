@@ -4,14 +4,14 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import { Button } from "@mui/material";
-import { API_URL } from "./Const";
+import { API_URL, isLoadingAtom } from "./Const";
 import axios from "axios";
 import { formatDateToString, parseStringToDate, formatDateToYM, addDayStringDateToString, addHourStringDateToDate, addMonthStringDateToDate } from "./FormatDate";
 
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import "react-big-calendar/lib/css/react-big-calendar.css";
-
+import { useSetAtom } from 'jotai';
 // Setup the localizer by providing the moment (or globalize, or Luxon) Object
 // to the correct localizer.
 const localizer = momentLocalizer(moment) // or globalizeLocalizer
@@ -33,6 +33,7 @@ const SeatCalendar = (props, ref) => {
   //席ID
   let tmpCalendarList = [];
   const [calendarList, setCalendarList] = useState(tmpCalendarList);
+  const setIsLoading = useSetAtom(isLoadingAtom);
   //日付変更時コールバック
   const onNavigate = useCallback((newDate) => {
     const _newDateYm = formatDateToYM(newDate);
@@ -68,7 +69,7 @@ const SeatCalendar = (props, ref) => {
     currentDateYm = _dateYm;
     currentDateYmd = _dateYmd;
     setDateYmd(parseStringToDate(_fromDate));
-
+    setIsLoading(true);
     axios
       .post(API_URL.CALENDAR, {
         seat_id: _seatId,
@@ -77,9 +78,11 @@ const SeatCalendar = (props, ref) => {
         date_ym_prev: _dateYmPrev
       })
       .then((response) => {
+        setIsLoading(false);
         makeCalendarList(response.data);
       })
       .catch((error) => {
+        setIsLoading(false);
         console.log(error.message);
         return;
       });;
