@@ -20,6 +20,8 @@ const localizer = momentLocalizer(moment) // or globalizeLocalizer
 /** メッセージ */
 const MESSAGE = {
   FACILITY_REGIST_BUTTON: "この部屋を予約する",
+  ATTENDEES: "参加者：",
+  ATTENDEES_OTHER: "…他",
 }
 
 const FacilitySchedule = (props) => {
@@ -87,13 +89,23 @@ const FacilitySchedule = (props) => {
     });
   }
   /** レスポンスからカレンダー一覧の形式に変えてセットする */
+  const getTitle = (calendar) => {
+    //calendar.subject
+    let attendeesNames = calendar.attendees.map(a => a.name);
+    let attendees = attendeesNames.join("、");
+    console.log(attendeesNames.length);
+    if(attendeesNames.length > 3){
+      attendeesNames = attendeesNames.slice(0, 3);
+      attendees = `${attendeesNames.join("、")}${MESSAGE.ATTENDEES_OTHER}`;
+    }
+    return `${calendar.subject} ${MESSAGE.ATTENDEES}${attendees}`;
+  }
+  /** レスポンスからカレンダー一覧の形式に変えてセットする */
   const makeScheduleList = (scheduleList) => {
     let _scheduleList = [];
     scheduleList.events.map((calendar) => {
-      const facility = calendar.facilities[0];
-      //console.log(facility);
       let addCalendar = {
-        title: calendar.subject,
+        title: getTitle(calendar),
         start: parseStringToISODate(calendar.start.dateTime),
         end: parseStringToISODate(calendar.end.dateTime),
         allDay: false,
