@@ -1,5 +1,5 @@
 import { icon } from 'leaflet';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Marker, Tooltip } from 'react-leaflet';
 import { API_URL, selectSeatDateAtom, facilityScheduleOpenAtom, selectFacilityIdAtom, selectFloorAtom, isLoadingAtom } from "./Const";
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -18,11 +18,14 @@ const LeafletMarkerFacility = (props) => {
   const setIsLoading = useSetAtom(isLoadingAtom);
   const selectSeatDate = useAtomValue(selectSeatDateAtom);
   const selectFloor = useAtomValue(selectFloorAtom);
+  //席の位置座標
+  const [position, setPosition] = useState(props.position);
   //席ID
   const [seatId] = useState(props.seatId);
   const [facilityId] = useState(props.facilityId);
   //使用中アイコン
   let iconClass = props.iconClass;
+  const markerRef = useRef(null);
 
   //自由席アイコン
   const freeIcon = new icon({
@@ -80,8 +83,22 @@ const LeafletMarkerFacility = (props) => {
   }
 
   const eventHandlers = {
+    //席のドラッグ開始　席を半透明にする
+    dragstart: () => {
+      const marker = markerRef.current;
+      marker.setOpacity(0.6);
+    },
+    //席のドラッグ終了　席情報を更新する
+    dragend: () => {
+      const marker = markerRef.current;
+      const AfterPosition = marker.getLatLng();
+      marker.setOpacity(1);
+      setPosition([AfterPosition.lat, AfterPosition.lng]);
+      props.setPositionForSeatList(seatId, AfterPosition.lat, AfterPosition.lng);
+    },
     //席クリック　削除するかはmarkerDeleteで判定
     click: (e) => {
+      props.markerDelete(seatId);
       if (!admin) {
         setSelectFacilityId(props.facilityId);
         setFacilityScheduleOpen(true);
@@ -94,7 +111,7 @@ const LeafletMarkerFacility = (props) => {
   }
 
   return (
-    <Marker draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
+    <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
       <Tooltip direction={tooltipDirection} permanent={true}><b>{admin ? seatId : popupText}</b></Tooltip>
     </Marker>
   )

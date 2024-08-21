@@ -44,11 +44,11 @@ const LeafletMain = (props, ref) => {
   //オフィス画像の初期値
   const [floorMap, setFloorMap] = useState("office.png");
   //leafletの中心座標
-  const defaultCenterLatLng = new LatLng(235, 400);
-  const anotherCenterLatLng = new LatLng(365, 400);
+  const defaultCenterLatLng = new LatLng(280, 400);
+  const anotherCenterLatLng = new LatLng(320, 400);
   const [centerLatLng, setCenterLatLng] = useState(defaultCenterLatLng);
   //leafletの描画サイズ
-  const defaultBounds = new LatLngBounds([0, 0], [470, 835]);
+  const defaultBounds = new LatLngBounds([0, 0], [558, 835]);
   const anotherBounds = new LatLngBounds([0, 0], [600, 735]);
   const [bounds, setBounds] = useState(defaultBounds);
 
@@ -202,11 +202,20 @@ const LeafletMain = (props, ref) => {
         setCenterLatLng(anotherCenterLatLng);
         //leafletの描画サイズ
         setBounds(anotherBounds);
+        
+        setTimeout(function () {
+          map.setView(anotherCenterLatLng, 0);
+        }, 100);
       } else {
         //leafletの中心座標
         setCenterLatLng(defaultCenterLatLng);
         //leafletの描画サイズ
         setBounds(defaultBounds);
+
+        setTimeout(function () {
+          map.setView(defaultCenterLatLng, 0);
+        }, 100);
+        
       }
     },
     /** App.jsで座席位置登録が押下されたときに呼ばれる　席情報を更新する */
@@ -354,6 +363,8 @@ const LeafletMain = (props, ref) => {
               admin={props.admin}
               position={seat.position}
               iconClass={iconClass}
+              setPositionForSeatList={setPositionForSeatList}
+              markerDelete={markerDelete}
             />
           );
         } else {
