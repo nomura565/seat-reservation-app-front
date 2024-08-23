@@ -8,12 +8,12 @@ import "react-datetime/css/react-datetime.css";
 import axios from "axios";
 /** メッセージ */
 const MESSAGE = {
-  NOW_MEETING:"で使用中",
-  NO_MEETING:"空室",
+  NOW_MEETING: "で使用中",
+  NO_MEETING: "空室",
 }
 
 const LeafletMarkerFacility = (props) => {
-  const setSelectFacilityId= useSetAtom(selectFacilityIdAtom);
+  const setSelectFacilityId = useSetAtom(selectFacilityIdAtom);
   const setFacilityScheduleOpen = useSetAtom(facilityScheduleOpenAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
   const selectSeatDate = useAtomValue(selectSeatDateAtom);
@@ -61,25 +61,25 @@ const LeafletMarkerFacility = (props) => {
     const rangeEnd = dt.toISOString();
 
     return axios
-    .post(API_URL.GAROON_SCHEDULE_SELECT, {
-      range_start: rangeStart,
-      range_end: rangeEnd,
-      facility_id:facilityId
-    })
-    .then((response) => {
-      setIsLoading(false);
-      if (response.status === 200) {
-        //console.log(response.data);
-        setPopupText(`${response.data.events[0].subject} ${MESSAGE.NOW_MEETING}`);
-      } else {
-        setPopupText(MESSAGE.NO_MEETING);
+      .post(API_URL.GAROON_SCHEDULE_SELECT, {
+        range_start: rangeStart,
+        range_end: rangeEnd,
+        facility_id: facilityId
+      })
+      .then((response) => {
+        setIsLoading(false);
+        if (response.status === 200) {
+          //console.log(response.data);
+          setPopupText(`${response.data.events[0].subject} ${MESSAGE.NOW_MEETING}`);
+        } else {
+          setPopupText(MESSAGE.NO_MEETING);
+          return false;
+        }
+      })
+      .catch((error) => {
+        setIsLoading(false);
         return false;
-      }
-    })
-    .catch((error) => {
-      setIsLoading(false);
-      return false;
-    });
+      });
   }
 
   const eventHandlers = {

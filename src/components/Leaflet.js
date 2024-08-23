@@ -3,19 +3,19 @@ import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'rea
 import { MapContainer, TileLayer, ImageOverlay } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import { API_URL, PERMANENT_DATE, commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom, facilityScheduleOpenAtom, isLoadingAtom } from "./Const";
+import { API_URL, PERMANENT_DATE, commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom, isLoadingAtom } from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import { Button, ButtonGroup } from "@mui/material";
+import { ButtonGroup } from "@mui/material";
 import LeafletDialog from "./LeafletDialog";
 import { formatDateToString } from "./FormatDate";
 import ChatIcon from '@mui/icons-material/Chat';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
 import LeafletMarkerFacility from './LeafletMarkerFacility';
-
+import SideBarButton from './SideBarButton';
 
 /** メッセージ */
 const MESSAGE = {
@@ -122,8 +122,8 @@ const LeafletMain = (props, ref) => {
   }
   /** コメントボタンクリックイベント */
   const onClickCommentButton = () => {
-    if(commentList.length > 0) setCommentDrawerOpen(true);
-    
+    if (commentList.length > 0) setCommentDrawerOpen(true);
+
   }
   /** 席削除ボタンクリックイベント　席アイコンを点滅状態にする */
   const onClickDeleteButton = () => {
@@ -166,7 +166,7 @@ const LeafletMain = (props, ref) => {
    */
   const setPositionForSeatList = (seatId, lat, lng) => {
     let _temp = seatList;
-    _temp.map((seat) => {
+    _temp.forEach((seat) => {
       if (seat.seat_id === seatId) {
         seat.lat = lat;
         seat.lng = lng;
@@ -202,7 +202,7 @@ const LeafletMain = (props, ref) => {
         setCenterLatLng(anotherCenterLatLng);
         //leafletの描画サイズ
         setBounds(anotherBounds);
-        
+
         setTimeout(function () {
           map.setView(anotherCenterLatLng, 0);
         }, 100);
@@ -215,7 +215,7 @@ const LeafletMain = (props, ref) => {
         setTimeout(function () {
           map.setView(defaultCenterLatLng, 0);
         }, 100);
-        
+
       }
     },
     /** App.jsで座席位置登録が押下されたときに呼ばれる　席情報を更新する */
@@ -292,54 +292,39 @@ const LeafletMain = (props, ref) => {
         variant="contained"
         className="my-button-group"
       >
-        <Button
-          variant="outlined"
-          size="small"
-          className="my-button my-location-button"
-          onClick={onClickMyLocationButton}>
-          <MyLocationIcon className="my-icon" />
-        </Button>
+        <SideBarButton
+          isTop={true}
+          onClick={onClickMyLocationButton}
+          icon={<MyLocationIcon className="my-icon" />}
+        />
         {props.admin
           ?
-          <Button
-            variant="outlined"
-            size="small"
-            className="my-button my-badge-button"
-            onClick={onClickAddButton}>
-            <PersonAddAlt1Icon className="my-icon" />
-          </Button>
+          <SideBarButton
+            onClick={onClickAddButton}
+            icon={<PersonAddAlt1Icon className="my-icon" />}
+          />
           :
-          <Button
-            variant="outlined"
-            size="small"
-            className="my-button my-badge-button"
-            onClick={onClickMyBadgeButton}>
-            <VisibilityOffIcon className="my-icon" />
-          </Button>
+          <SideBarButton
+            onClick={onClickMyBadgeButton}
+            icon={<VisibilityOffIcon className="my-icon" />}
+          />
         }
         {props.admin
           ?
-          <Button
-            variant="outlined"
-            size="small"
-            className="my-button my-badge-button"
-            onClick={onClickDeleteButton}>
-            <DeleteForeverIcon className="my-icon" />
-          </Button>
-          : 
-          <Button
-            variant="outlined"
-            size="small"
-            className="my-button my-badge-button"
-            onClick={onClickCommentButton}>
-            {commentList.length > 0
-            ?
-            <MarkUnreadChatAltIcon sx={{ color:"#44b700" }} className="my-icon rippleIcon" />
-            :
-            <ChatIcon className="my-icon" />
+          <SideBarButton
+            onClick={onClickDeleteButton}
+            icon={<DeleteForeverIcon className="my-icon" />}
+          />
+          :
+          <SideBarButton
+            onClick={onClickCommentButton}
+            icon={commentList.length > 0
+              ?
+              <MarkUnreadChatAltIcon sx={{ color: "#44b700" }} className="my-icon rippleIcon" />
+              :
+              <ChatIcon className="my-icon" />
             }
-            
-          </Button>
+          />
         }
       </ButtonGroup>
       <TileLayer
@@ -352,7 +337,7 @@ const LeafletMain = (props, ref) => {
         zIndex={10}
       />
       {seatList.map((seat) => {
-        if(seat.facility_flg){
+        if (seat.facility_flg) {
           return (
             <LeafletMarkerFacility
               map={map}
@@ -387,6 +372,7 @@ const LeafletMain = (props, ref) => {
               image={(seat.image_data !== null) ? seat.image_data : null}
               dateChangeYmd={props.dateChangeYmd}
               registedComment={seat.comment}
+              sittingFlg={seat.sitting_flg}
             />
           );
         }

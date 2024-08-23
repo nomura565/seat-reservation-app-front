@@ -63,37 +63,37 @@ const CommentDrawer = (props) => {
       <List>
         {commentList.map((comment, idx) => (
           <div>
-          <ListItemButton key={comment.key} onClick={() =>setSelectCommentSeatId(comment.seat_id)}>
-            <ListItemIcon>
-              <ChairAltIcon />
-            </ListItemIcon>
-            <ListItemText primary={comment.user_name + MESSAGE.WHOS_SEAT} className='comment-drawer-text' />
-          </ListItemButton>
-          {comment.comment != null
-          ?
-          <ListItemButton key={comment.key}  sx={{ pl: 3 }}>
-            <ListItemIcon>
-              <MarkUnreadChatAltIcon />
-            </ListItemIcon>
-            <ListItemText primary={comment.comment} className='comment-drawer-text' />
-          </ListItemButton>
-          :
-          ""
-          }
-          <Collapse in={true} timeout="auto" unmountOnExit>
-          <List component="div" disablePadding>
-          {comment.replys.map((reply, idx) => (
-            <ListItemButton sx={{ pl: 5 }}>
+            <ListItemButton key={comment.key} onClick={() => setSelectCommentSeatId(comment.seat_id)}>
               <ListItemIcon>
-                <ReplyIcon />
+                <ChairAltIcon />
               </ListItemIcon>
-              <ListItemText primary={reply} className='comment-drawer-text'/>
+              <ListItemText primary={comment.user_name + MESSAGE.WHOS_SEAT} className='comment-drawer-text' />
             </ListItemButton>
-            ))}
-          </List>
-        </Collapse>
-        <Divider />
-        </div>
+            {comment.comment != null
+              ?
+              <ListItemButton key={comment.key} sx={{ pl: 3 }}>
+                <ListItemIcon>
+                  <MarkUnreadChatAltIcon />
+                </ListItemIcon>
+                <ListItemText primary={comment.comment} className='comment-drawer-text' />
+              </ListItemButton>
+              :
+              ""
+            }
+            <Collapse in={true} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {comment.replys.map((reply, idx) => (
+                  <ListItemButton sx={{ pl: 5 }}>
+                    <ListItemIcon>
+                      <ReplyIcon />
+                    </ListItemIcon>
+                    <ListItemText primary={reply} className='comment-drawer-text' />
+                  </ListItemButton>
+                ))}
+              </List>
+            </Collapse>
+            <Divider />
+          </div>
         ))}
       </List>
     </Box>

@@ -13,12 +13,13 @@ import { useSearchParams } from "react-router-dom";
 import { Button } from "@mui/material";
 
 import TemporaryDrawer from './components/TemporaryDrawer';
-import { isMobile } from "react-device-detect";
+import { isBrowser } from "react-device-detect";
 import FloorAndDate from './components/FloorAndDate';
 import CommentDrawer from './components/CommentDrawer';
 import { useAtom, useSetAtom } from 'jotai';
 import FacilitySchedule from './components/FacilitySchedule';
 import Progress from './components/Progress';
+import Grid from '@mui/material/Grid';
 
 /** メッセージ */
 const MESSAGE = {
@@ -95,8 +96,8 @@ const App = () => {
   }
 
   return (
-    <div className={isMobile ? "parent" : ""}>
-      {isMobile
+    <div className={!isBrowser ? "parent" : ""}>
+      {!isBrowser
         ?
         <TemporaryDrawer
           floor={selectFloor}
@@ -104,17 +105,15 @@ const App = () => {
           dateChange={dateChange}
         />
         :
-        <div className='date-container'>
+        <Grid container >
           <FloorAndDate
             handleChange={handleChange}
             dateChange={dateChange}
           />
-          {admin
-            ?
+          {admin && 
             <Button className="edit-button" variant="outlined" onClick={onClickButton}>{MESSAGE.EDIT_BUTTON}</Button>
-            : ""
           }
-        </div>
+        </Grid>
       }
       <LeafletMain
         ref={childRef}

@@ -27,4 +27,5 @@ export const API_URL = {
   CONFIRM_SEAT_USE: process.env.REACT_APP_BASE_URL + "confirmSeatUse",
   COMMENT_SELECT: process.env.REACT_APP_BASE_URL + "commentSelect",
   GAROON_SCHEDULE_SELECT: process.env.REACT_APP_BASE_URL + "garoonScheduleSelect",
+  SITTNG_FLG_UPDATE: process.env.REACT_APP_BASE_URL + "sittingFlgUpdate",
 }

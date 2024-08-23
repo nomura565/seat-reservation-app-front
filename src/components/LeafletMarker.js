@@ -2,7 +2,7 @@ import { icon } from 'leaflet';
 import React, { useState, useRef } from 'react';
 import { Marker, Popup, Tooltip, useMapEvents, useMap } from 'react-leaflet';
 import Box from '@mui/material/Box';
-import { TextField, Button, ButtonGroup, FormControlLabel, Checkbox, Tooltip as MaterialTooltip } from "@mui/material";
+import { TextField, Button, FormControlLabel, Checkbox, Tooltip as MaterialTooltip } from "@mui/material";
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
@@ -19,6 +19,10 @@ import { formatDateToString } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
 import { useAtomValue, useSetAtom } from 'jotai';
+import PersonOutlineTwoToneIcon from '@mui/icons-material/PersonOutlineTwoTone';
+import PersonOffTwoToneIcon from '@mui/icons-material/PersonOffTwoTone';
+import Grid from '@mui/material/Grid';
+import Avatar from '@mui/material/Avatar';
 
 const LS_KEY = "seatResavationSystemUserName";
 
@@ -51,45 +55,54 @@ const MESSAGE = {
   DIALOG_UNSEAT_CONFIRM_TITLE: "空席登録確認",
   DIALOG_UNSEAT_CONFIRM_DETAIL: "この座席を空席にしますか？",
   DIALOG_API_FAIL_SEAT_USE: "この座席に下記の登録がすでにあるため登録できません。",
+  SITTING: "在席中と未在席を切り替える",
 }
 
 let currentLat = null;
 let currentLng = null;
 
 const LeafletMarker = (props) => {
-  const selectCommentSeatId= useAtomValue(selectCommentSeatIdAtom);
+  const selectCommentSeatId = useAtomValue(selectCommentSeatIdAtom);
   const selectSeatDate = useAtomValue(selectSeatDateAtom);
   const setCommentListInit = useSetAtom(commentListInitAtom);
   //席ID
   const [seatId] = useState(props.seatId);
   const setIsLoading = useSetAtom(isLoadingAtom);
+  //在席フラグ
+  const [sittingFlg, setSittingFlg] = useState(props.sittingFlg);
   //使用中アイコン
   let iconClass = props.iconClass;
-  if(selectCommentSeatId === seatId){
+  if (selectCommentSeatId === seatId) {
     iconClass = "blinking";
   }
 
-  const occupyIcon = new icon({
-    iconUrl: 'occupy.png',
+  const sittingIcon = new icon({
+    iconUrl: 'sitting.png',
+    iconSize: [25, 25], // size of the icon
+    className: iconClass
+  });
+  //未在席アイコン
+  const sittingYetIcon = new icon({
+    iconUrl: 'sitting_yet.png',
     iconSize: [25, 25], // size of the icon
     className: iconClass
   });
   //固定席アイコン
-  const permanentIcon = new icon({
-    iconUrl: 'permanent.png',
+  const sittingPermanentIcon = new icon({
+    iconUrl: 'sitting_permanent.png',
     iconSize: [25, 25], // size of the icon
     className: iconClass
   });
   //追加席アイコン
-  const addIcon = new icon({
-    iconUrl: 'add.png',
+  const sittingAddIcon = new icon({
+    iconUrl: 'sitting_add.png',
     iconSize: [25, 25], // size of the icon
     className: iconClass
   });
   //自由席アイコン
-  const freeIcon = new icon({
-    iconUrl: 'free.png',
-    iconSize: [14, 25], // size of the icon
+  const sittingFreeIcon = new icon({
+    iconUrl: 'sitting_free.png',
+    iconSize: [25, 25], // size of the icon
     className: iconClass
   });
 
@@ -145,8 +158,6 @@ const LeafletMarker = (props) => {
     tooltip_direction = "auto";
   }
   const [tooltipDirection] = useState(tooltip_direction);
-  //席の位置座標
-  const [position, setPosition] = useState(props.position);
   //管理モードかのフラグ
   const [admin] = useState(props.admin);
   //アイコン
@@ -413,7 +424,6 @@ const LeafletMarker = (props) => {
       const marker = markerRef.current;
       const AfterPosition = marker.getLatLng();
       marker.setOpacity(1);
-      setPosition([AfterPosition.lat, AfterPosition.lng]);
       props.setPositionForSeatList(seatId, AfterPosition.lat, AfterPosition.lng);
     },
     //席クリック　削除するかはmarkerDeleteで判定
@@ -466,18 +476,23 @@ const LeafletMarker = (props) => {
 
   const getIcon = () => {
     if (props.seatDate === "add") {
-      return addIcon;
+      return sittingAddIcon;
     }
     if (admin) {
-      return freeIcon;
+      return sittingFreeIcon;
     }
     if (props.isPermanent) {
-      return permanentIcon;
+      return sittingPermanentIcon;
     }
     if (useSeatFlg) {
-      return occupyIcon;
+      if (sittingFlg) {
+        return sittingIcon;
+      } else {
+        return sittingYetIcon;
+      }
+
     } else {
-      return freeIcon;
+      return sittingFreeIcon;
     }
   }
   /**アイコンのファイル選択時イベント */
@@ -600,6 +615,34 @@ const LeafletMarker = (props) => {
       });
   }
 
+  /**在席切替押下 */
+  const onClickSittingButton = () => {
+    setIsLoading(true);
+    const updateSittingFlg = (sittingFlg === 1) ? 0 : 1;
+    axios
+      .post(API_URL.SITTNG_FLG_UPDATE, {
+        seat_date: formatDateToString(selectSeatDate),
+        seat_id: seatId,
+        sitting_flg: updateSittingFlg,
+        used_name: (localStorage.getItem(LS_KEY)) ? localStorage.getItem(LS_KEY) : ""
+      })
+      .then((response) => {
+        setIsLoading(false);
+        if (response.status === 200) {
+          setSittingFlg(updateSittingFlg);
+        } else {
+          InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
+          return;
+        }
+
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        InsertFail(error.message);
+        return;
+      });
+  }
+
   return (
     <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
       <Tooltip direction={tooltipDirection} permanent={props.tooltipPermanent && (admin || useSeatFlg)}><b>{admin ? seatId : popupText}{props.isPermanent ? "" : ""}</b></Tooltip>
@@ -619,134 +662,157 @@ const LeafletMarker = (props) => {
             noValidate
             autoComplete="off"
           >
-            <div className={useSeatFlg ? unUseClassName : ""}>
-              <Button size="small" variant="contained" startIcon={<FaceRetouchingNaturalIcon />}
-                onClick={() => onClickfileUploadButton()}>{MESSAGE.ICON_UPLOAD_BUTTON}</Button>
-              <div className="image">
-                <input type="file" accept="image/*"
-                  hidden ref={inputFileRef}
-                  onChange={(e) => onFileChange(e)}
-                />
-                <div>
-                  {imageData != null && (<img src={imageData} alt="tmp_icon" />)}
-                </div>
-              </div>
-            </div>
-            <div className={useSeatFlg ? "image" : unUseClassName}>
-              {props.image != null && (<img src={props.image} alt="icon" />)}
-            </div>
-            <div>
-              <TextField
-                disabled={useSeatFlg}
-                name="userName"
-                value={userName}
-                onChange={userNameChange}
-                label={MESSAGE.NAME}
-                variant="standard"
-                size="small"
-              />
-              {!useSeatFlg
-                ?
-                <div className='comment-area'>
-                  <CommentTextField
-                    isComment={true}
-                    readOnly={false}
-                    onChange={commentChange}
-                  />
-                </div>
-                :
-                ""
-              }
-            </div>
-            <div className={useSeatFlg ? "" : unUseClassName}>
-              {props.registedComment !== null
-                ?
-                <div className='comment-area'>
-                  <CommentTextField
-                    isComment={true}
-                    readOnly={true}
-                    value={props.registedComment}
-                  />
-                </div>
-                :
-                ""
-              }
-              <div id="replyListArea" className='reply-list-area'>
-                {replyList.map((reply) => {
-                  return (
-                    <div className='reply-area' key={reply.key}>
-                      <CommentTextField
-                        isComment={false}
-                        readOnly={true}
-                        value={reply.comment}
+            <Grid container alignItems="center" rowSpacing={0.5} >
+              <Grid item xs={12}>
+                {!useSeatFlg &&
+                  <div>
+                    <Button size="small" variant="contained" startIcon={<FaceRetouchingNaturalIcon />}
+                      onClick={() => onClickfileUploadButton()}>
+                      {MESSAGE.ICON_UPLOAD_BUTTON}
+                    </Button>
+                    <div className="image">
+                      <input type="file" accept="image/*"
+                        hidden ref={inputFileRef}
+                        onChange={(e) => onFileChange(e)}
                       />
+                      <div>
+                        {imageData != null && (<Avatar src={imageData} alt="tmp_icon" sx={{ width: 100, height: 100 }} />)}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-              {useSeatFlg
-                ?
-                <div className='reply-area'>
-                  <CommentTextField
-                    isComment={false}
-                    readOnly={false}
-                    value={replyComment}
-                    onChange={replyChange}
-                  />
-                  <Button className="reply-send-button" onClick={() => onClickReplySendButton()}>
-                    <AddCommentTwoToneIcon />
-                  </Button>
+                  </div>
+                }
+                <div className={useSeatFlg ? "image" : unUseClassName}>
+                  {props.image != null && (<Avatar src={props.image} alt="icon" sx={{ width: 100, height: 100 }} />)}
                 </div>
-                :
-                ""
-              }
-            </div>
-            <div className={useSeatFlg && props.isPermanent ? "use-seat-date" : "unuse-seat-date"}>
-              <input
-                className="date-input"
-                value={fromDate}
-                disabled={true}
-              />
-              ～
-              <Datetime
-                locale='ja'
-                inputProps={{ "className": "date-input", "readOnly": "readOnly" }}
-                dateFormat={DATE_FORMAT}
-                timeFormat={false}
-                value={toDate}
-                initialValue={toDate}
-                closeOnSelect={true}
-                onChange={(selectedDate) => { toDateChange((selectedDate || Today)) }}
-              />
-
-            </div>
-            <div className={useSeatFlg ? unUseClassName : ""}>
-              <MaterialTooltip placement="right" title={MESSAGE.PARMANENT_TOOLTIP_TITLE} open={permanentFlg && isPoppupOpen}>
-                <FormControlLabel required control={<Checkbox checked={permanentFlg} onChange={handleChange} size="small" />} label={MESSAGE.PARMANENT} />
-              </MaterialTooltip>
-            </div>
-            <div>
-              <ButtonGroup size="small" aria-label="small button group">
-                <div className={useSeatFlg ? unUseClassName : ""}>
-                  <Button startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
-                </div>
-                <div className={useSeatFlg ? "" : unUseClassName}>
-                  <MaterialTooltip placement="right" title={props.isPermanent ? "" : MESSAGE.UNSEAT_TOOLTIP_TITLE}>
-                    <Button startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
+              </Grid>
+              <Grid item xs={10}>
+                <TextField
+                  disabled={useSeatFlg}
+                  name="userName"
+                  value={userName}
+                  onChange={userNameChange}
+                  label={MESSAGE.NAME}
+                  variant="standard"
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={2}>
+                {(useSeatFlg && !props.isPermanent) &&
+                  <MaterialTooltip placement="right" title={MESSAGE.SITTING}>
+                    <Button className="sitting-button" onClick={onClickSittingButton}>
+                      {sittingFlg
+                        ?
+                        <PersonOutlineTwoToneIcon sx={{ fontSize: 35, color: "#5cc3bb" }} />
+                        :
+                        <PersonOffTwoToneIcon color="action" sx={{ fontSize: 35 }} />
+                      }
+                    </Button>
                   </MaterialTooltip>
-                </div>
-              </ButtonGroup>
-              {!props.isPermanent
-                ?
-                <MaterialTooltip placement="right" title={MESSAGE.SEAT_SCHEDULE_BUTTON}>
-                  <Button className="calendar-button" onClick={onClickCalendarButton}>
-                    <CalendarMonthTwoToneIcon />
-                  </Button>
-                </MaterialTooltip>
-                :
-                ""
+                }
+              </Grid>
+              {!useSeatFlg &&
+                <Grid item xs={12}>
+                  <div className='comment-area'>
+                    <CommentTextField
+                      isComment={true}
+                      readOnly={false}
+                      onChange={commentChange}
+                    />
+                  </div>
+                </Grid>
               }
-            </div>
+              <Grid item xs={12}>
+                {(useSeatFlg && props.registedComment !== null) &&
+                  <div className='comment-area'>
+                    <CommentTextField
+                      isComment={true}
+                      readOnly={true}
+                      value={props.registedComment}
+                    />
+                  </div>
+                }
+                <div id="replyListArea" className='reply-list-area'>
+                  {replyList.map((reply) => {
+                    return (
+                      <div className='reply-area' key={reply.key}>
+                        <CommentTextField
+                          isComment={false}
+                          readOnly={true}
+                          value={reply.comment}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                {useSeatFlg &&
+                  <div className='reply-area'>
+                    <CommentTextField
+                      isComment={false}
+                      readOnly={false}
+                      value={replyComment}
+                      onChange={replyChange}
+                    />
+                    <Button className="reply-send-button" onClick={() => onClickReplySendButton()}>
+                      <AddCommentTwoToneIcon />
+                    </Button>
+                  </div>
+                }
+              </Grid>
+              {(!useSeatFlg || !props.isPermanent) &&
+                <Grid item xs={6}>
+                  <input
+                    className="date-input"
+                    value={fromDate}
+                    disabled={true}
+                  />
+                </Grid>
+              }
+              {(!useSeatFlg || !props.isPermanent) &&
+                <Grid className="date-input-wave" item xs={1}>
+                  ～
+                </Grid>
+              }
+              {(!useSeatFlg || !props.isPermanent) &&
+                <Grid item xs={5}>
+                  <Datetime
+                    locale='ja'
+                    inputProps={{ "className": "date-input", "readOnly": "readOnly" }}
+                    dateFormat={DATE_FORMAT}
+                    timeFormat={false}
+                    value={toDate}
+                    initialValue={toDate}
+                    closeOnSelect={true}
+                    onChange={(selectedDate) => { toDateChange((selectedDate || Today)) }}
+                  />
+                </Grid>
+              }
+              <Grid item xs={12}>
+                {!useSeatFlg &&
+                  <MaterialTooltip placement="right" title={MESSAGE.PARMANENT_TOOLTIP_TITLE} open={permanentFlg && isPoppupOpen}>
+                    <FormControlLabel required control={<Checkbox checked={permanentFlg} onChange={handleChange} size="small" />} label={MESSAGE.PARMANENT} />
+                  </MaterialTooltip>
+                }
+              </Grid>
+              <Grid item xs={8}>
+                {!useSeatFlg
+                  ?
+                  <Button variant="outlined" startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
+                  :
+                  <MaterialTooltip placement="right" title={props.isPermanent ? "" : MESSAGE.UNSEAT_TOOLTIP_TITLE}>
+                    <Button variant="outlined" disabled={sittingFlg} startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
+                  </MaterialTooltip>
+                }
+              </Grid>
+              <Grid item xs={4} sx={{ justifyContent: "center" }}>
+                {!props.isPermanent &&
+                  <MaterialTooltip placement="right" title={MESSAGE.SEAT_SCHEDULE_BUTTON}>
+                    <Button className="" onClick={onClickCalendarButton}>
+                      <CalendarMonthTwoToneIcon />
+                    </Button>
+                  </MaterialTooltip>
+                }
+              </Grid>
+            </Grid>
           </Box>
         </Popup>
       }

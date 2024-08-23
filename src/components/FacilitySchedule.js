@@ -56,7 +56,7 @@ const FacilitySchedule = (props) => {
   }, [selectFacilityId]);
 
   useEffect(() => {
-    if(facilityScheduleOpen){
+    if (facilityScheduleOpen) {
       getGaroonScheduleList(selectSeatDate);
     }
   }, [facilityScheduleOpen])
@@ -67,26 +67,26 @@ const FacilitySchedule = (props) => {
     setScheduleList([]);
 
     const rangeStart = parseStringToDate(_fromDate).toISOString();
-    const rangeEnd  = addDayStringDateToDate(_fromDate, 1).toISOString();
+    const rangeEnd = addDayStringDateToDate(_fromDate, 1).toISOString();
 
     return axios
-    .post(API_URL.GAROON_SCHEDULE_SELECT, {
-      range_start: rangeStart,
-      range_end: rangeEnd,
-      facility_id:selectFacilityId
-    })
-    .then((response) => {
-      setIsLoading(false);
-      if (response.status === 200) {
-        makeScheduleList(response.data);
-      } else {
+      .post(API_URL.GAROON_SCHEDULE_SELECT, {
+        range_start: rangeStart,
+        range_end: rangeEnd,
+        facility_id: selectFacilityId
+      })
+      .then((response) => {
+        setIsLoading(false);
+        if (response.status === 200) {
+          makeScheduleList(response.data);
+        } else {
+          return false;
+        }
+      })
+      .catch((error) => {
+        setIsLoading(false);
         return false;
-      }
-    })
-    .catch((error) => {
-      setIsLoading(false);
-      return false;
-    });
+      });
   }
   /** レスポンスからカレンダー一覧の形式に変えてセットする */
   const getTitle = (calendar) => {
@@ -94,7 +94,7 @@ const FacilitySchedule = (props) => {
     let attendeesNames = calendar.attendees.map(a => a.name);
     let attendees = attendeesNames.join("、");
     console.log(attendeesNames.length);
-    if(attendeesNames.length > 3){
+    if (attendeesNames.length > 3) {
       attendeesNames = attendeesNames.slice(0, 3);
       attendees = `${attendeesNames.join("、")}${MESSAGE.ATTENDEES_OTHER}`;
     }
@@ -111,7 +111,7 @@ const FacilitySchedule = (props) => {
         allDay: false,
         event_id: calendar.id,
       }
-      _scheduleList= [..._scheduleList, addCalendar];
+      _scheduleList = [..._scheduleList, addCalendar];
     });
     setScheduleList(_scheduleList);
   }
@@ -152,7 +152,7 @@ const FacilitySchedule = (props) => {
               defaultDate={parseStringToDate(selectSeatDate)}
               scrollToTime={parseStringToNineHours(selectSeatDate)}
               Date={parseStringToDate(selectSeatDate)}
-              
+
             />
           </DialogContentText>
         </DialogContent>

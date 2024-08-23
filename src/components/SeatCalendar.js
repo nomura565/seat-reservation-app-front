@@ -90,7 +90,7 @@ const SeatCalendar = (props, ref) => {
   /** レスポンスからカレンダー一覧の形式に変えてセットする */
   const makeCalendarList = (calendarList) => {
     let _calendarList = [];
-    calendarList.map((calendar) => {
+    calendarList.forEach((calendar) => {
       //すでに一覧に追加した中に同じ名前、かつ昨日の日付のものがあれば抽出
       const yesterday = addDayStringDateToString(calendar.seat_date, -1);
       const alreadyAdded = _calendarList.find((_calendar) => {

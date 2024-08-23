@@ -26,13 +26,16 @@ code {
   margin-right: 30px;
 }
 
+.date-input, .date-input2 {
+  font-family: "Meiryo", "メイリオ";
+}
+
 .date-input {
   width: 80px;
 }
 
 .date-input2 {
-  width: 120px;
-  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  width: 125px;
   font-weight: 400;
   font-size: 1rem;
   line-height: 1.4375em;
@@ -172,4 +175,14 @@ code {
     transform: scale(.9);
     opacity: 1,
   }
+}
+
+.sitting-button {
+  margin-top:10px !important;
+  margin-left:-5px !important;
+}
+
+.date-input-wave {
+  margin-left:-10px !important;
+  margin-right:5px !important;
 }

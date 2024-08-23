@@ -1,7 +1,7 @@
 import CircularProgress from '@mui/material/CircularProgress';
 import { green } from '@mui/material/colors';
 import { useAtomValue } from 'jotai';
-import { isLoadingAtom} from './../components/Const';
+import { isLoadingAtom } from './../components/Const';
 
 const Progress = (props) => {
   const isLoading = useAtomValue(isLoadingAtom);
@@ -15,7 +15,7 @@ const Progress = (props) => {
             position: 'absolute',
             top: '30%',
             left: '30%',
-            zIndex:10000
+            zIndex: 10000
           }}
         />
       )}
