@@ -15,7 +15,7 @@ import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import { format } from 'react-string-format';
 import SeatCalendar from './SeatCalendar';
 import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
-import { formatDateToString } from "./FormatDate";
+import { formatDateToString, getDateStringForChache } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -76,36 +76,23 @@ const LeafletMarker = (props) => {
     iconClass = "blinking";
   }
 
-  const sittingIcon = new icon({
-    iconUrl: 'sitting.png',
+  const getnewIcon = (iconUrl) => {
+    return new icon({
+    iconUrl: `${iconUrl}?${getDateStringForChache()}`,
     iconSize: [25, 25], // size of the icon
     className: iconClass
-  });
-  //未在席アイコン
-  const sittingYetIcon = new icon({
-    iconUrl: 'sitting_yet.png',
-    iconSize: [25, 25], // size of the icon
-    className: iconClass
-  });
-  //固定席アイコン
-  const sittingPermanentIcon = new icon({
-    iconUrl: 'sitting_permanent.png',
-    iconSize: [25, 25], // size of the icon
-    className: iconClass
-  });
-  //追加席アイコン
-  const sittingAddIcon = new icon({
-    iconUrl: 'sitting_add.png',
-    iconSize: [25, 25], // size of the icon
-    className: iconClass
-  });
-  //自由席アイコン
-  const sittingFreeIcon = new icon({
-    iconUrl: 'sitting_free.png',
-    iconSize: [25, 25], // size of the icon
-    className: iconClass
-  });
+    });
+  }
 
+  const sittingIcon = getnewIcon(`sitting.png`);
+  //未在席アイコン
+  const sittingYetIcon = getnewIcon(`sitting_yet.png`);
+  //固定席アイコン
+  const sittingPermanentIcon = getnewIcon(`sitting_permanent.png`); 
+  //追加席アイコン
+  const sittingAddIcon = getnewIcon(`sitting_add.png`); 
+  //自由席アイコン
+  const sittingFreeIcon = getnewIcon(`sitting_free.png`); 
   /** 更新モード */
   const UpdateMode = {
     default: 1,

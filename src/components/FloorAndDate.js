@@ -50,7 +50,7 @@ const FloorAndDate = (props) => {
           id="demo-simple-select-autowidth"
           value={selectFloor}
           onChange={props.handleChange}
-          autoWidth
+          sx={{width:"205px", maxWidth:"205px"}}
           label={MESSAGE.FLOOR}
         >
           {floorList.map((floor) => {

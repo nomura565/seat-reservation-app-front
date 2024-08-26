@@ -10,7 +10,7 @@ import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { ButtonGroup } from "@mui/material";
 import LeafletDialog from "./LeafletDialog";
-import { formatDateToString } from "./FormatDate";
+import { formatDateToString, getDateStringForChache } from "./FormatDate";
 import ChatIcon from '@mui/icons-material/Chat';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
@@ -332,7 +332,7 @@ const LeafletMain = (props, ref) => {
         url=""
       />
       <ImageOverlay
-        url={floorMap}
+        url={`${floorMap}?${getDateStringForChache()}`}
         bounds={bounds}
         zIndex={10}
       />

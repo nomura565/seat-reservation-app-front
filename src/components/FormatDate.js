@@ -74,3 +74,13 @@ export const addMonthStringDateToDate = (stringDate, addMonth) => {
   dt.setMonth(dt.getMonth() + addMonth);
   return dt;
 }
+
+/** yyyyMMddHHmmssの文字列を取得する（キャッシュ用） */
+export const getDateStringForChache = () => {
+  const d = new Date();
+  return format(
+    d,
+    "yyyyMMddHHmmss", {
+    locale: ja,
+  });
+}
