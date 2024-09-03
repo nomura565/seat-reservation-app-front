@@ -11,9 +11,18 @@ export const commentListInitAtom = atom(0);
 export const facilityScheduleOpenAtom = atom(false);
 export const selectFacilityIdAtom = atom(null);
 export const isLoadingAtom = atom(false);
+export const existDeleteUsersAtom = atom(false);
 
 export const DATE_FORMAT = "yyyy/MM/DD";
 export const PERMANENT_DATE = "XXXX/XX/XX";
+//在席管理機能を有効にするか
+export const SITTING_ENABLE_FLG = true;
+//在席自動削除機能を有効にするか
+export const SITTING_CONFIRM_ENABLE_FLG = false;
+//未在席の席を削除する時間
+export const SITTING_CONFIRM_TIME = 1100;
+//自動削除の警告が出る時間（-100で1時間前から警告）
+export const SITTING_CONFIRM_ALERT_TIME = SITTING_CONFIRM_TIME-100;
 
 export const API_URL = {
   FLOOR: process.env.REACT_APP_BASE_URL + "floor",
@@ -27,5 +36,6 @@ export const API_URL = {
   CONFIRM_SEAT_USE: process.env.REACT_APP_BASE_URL + "confirmSeatUse",
   COMMENT_SELECT: process.env.REACT_APP_BASE_URL + "commentSelect",
   GAROON_SCHEDULE_SELECT: process.env.REACT_APP_BASE_URL + "garoonScheduleSelect",
-  SITTNG_FLG_UPDATE: process.env.REACT_APP_BASE_URL + "sittingFlgUpdate",
+  SITTING_FLG_UPDATE: process.env.REACT_APP_BASE_URL + "sittingFlgUpdate",
+  SITTING_CONFIRM: process.env.REACT_APP_BASE_URL + "sittingConfirm",
 }

@@ -3,8 +3,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
 import LeafletMain from './components/Leaflet';
-import { API_URL, selectSeatDateAtom, selectFloorAtom, floorListAtom, isLoadingAtom } from "./components/Const";
-import { formatDateToString, parseStringToDate } from "./components/FormatDate";
+import { API_URL, selectSeatDateAtom, selectFloorAtom, floorListAtom, isLoadingAtom, SITTING_CONFIRM_TIME, SITTING_CONFIRM_ENABLE_FLG } from "./components/Const";
+import { formatDateToString, parseStringToDate, isAfterHour } from "./components/FormatDate";
 
 import "react-datetime/css/react-datetime.css";
 
@@ -34,19 +34,33 @@ const App = () => {
   const childRef = useRef();
   const [selectSeatDate, setSelectSeatDate] = useAtom(selectSeatDateAtom);
   const [selectFloor, setSelectFloor] = useAtom(selectFloorAtom);
-  let tmpFloorList = [];
   //管理モードパラメータ
   const [searchParams, setSearchParams] = useSearchParams();
   const paramAdmin = searchParams.get('admin');
-  const [admin, setAdmin] = useState((paramAdmin === null) ? false : paramAdmin);
+  const admin = (paramAdmin === null) ? false : paramAdmin;
 
   const [floorList, setFloorList] = useAtom(floorListAtom);
   const setIsLoading = useSetAtom(isLoadingAtom);
+  const [sittingConfirm, setSittingConfirm] = useState(false);
 
   useEffect(() => {
     //読み込み時オフィス一覧を取得する
     getFloorList();
+    if(SITTING_CONFIRM_ENABLE_FLG) setSittingConfirm(true);
   }, [])
+
+  useEffect(() => {
+    if(sittingConfirm === true){
+      //12時以降の場合、在席チェックを実行する
+      if(isAfterHour(SITTING_CONFIRM_TIME)){
+        setSittingConfirm(true);
+        axios
+        .post(API_URL.SITTING_CONFIRM, {
+          seat_date: formatDateToString(new Date())
+        });
+      }
+    }
+  }, [sittingConfirm])
 
   /** オフィス一覧を取得 */
   const getFloorList = () => {

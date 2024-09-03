@@ -1,22 +1,29 @@
 import { LatLng, LatLngBounds, CRS } from 'leaflet';
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react'
-import { MapContainer, TileLayer, ImageOverlay } from 'react-leaflet';
+import { MapContainer, TileLayer, ImageOverlay  } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import { API_URL, PERMANENT_DATE, commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom, isLoadingAtom } from "./Const";
+import { API_URL, PERMANENT_DATE, SITTING_CONFIRM_TIME, SITTING_CONFIRM_ALERT_TIME, SITTING_CONFIRM_ENABLE_FLG, commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom, isLoadingAtom, existDeleteUsersAtom } from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { ButtonGroup } from "@mui/material";
 import LeafletDialog from "./LeafletDialog";
-import { formatDateToString, getDateStringForChache } from "./FormatDate";
+import { formatDateToString, getDateStringForChache, isAfterHour } from "./FormatDate";
 import ChatIcon from '@mui/icons-material/Chat';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
 import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
 import LeafletMarkerFacility from './LeafletMarkerFacility';
 import SideBarButton from './SideBarButton';
+import PersonOffTwoToneIcon from '@mui/icons-material/PersonOffTwoTone';
+import LeafletMarkerComment from "./LeafletMarkerComment";
 
+const formatTime = (value) => {
+  value = value.toString();
+  return `${value.substr(0, 2)}:${value.substr(2, 2)}`;
+
+}
 /** メッセージ */
 const MESSAGE = {
   ADD: "追加",
@@ -25,6 +32,8 @@ const MESSAGE = {
   DIALOG_SUCCESS_TITLE: "座席位置登録",
   DIALOG_SUCCESS_DETAIL: "座席位置を登録しました。",
   API_RESPONSE_UNEXPECT: "APIのレスポンスが正常以外です",
+  DIALOG_EXISTS_DELETE_USER_TITLE: "未在席あり",
+  DIALOG_EXISTS_DELETE_USER_DETAIL: `点滅アイコンの席は未在席のため本日${formatTime(SITTING_CONFIRM_TIME)}に自動で削除されます。`,
 }
 
 /*
@@ -81,6 +90,7 @@ const LeafletMain = (props, ref) => {
 
   const setIsLoading = useSetAtom(isLoadingAtom);
 
+  const [existDeleteUsers, setExistDeleteUsers] = useAtom(existDeleteUsersAtom);
   /** 現在のセレクトボックスの値から席一覧を取得する　LeafletMarker.jsからも参照 */
   const getCurrentSeatList = () => {
     return getSeatList(selectSeatDate, selectFloor);
@@ -123,7 +133,10 @@ const LeafletMain = (props, ref) => {
   /** コメントボタンクリックイベント */
   const onClickCommentButton = () => {
     if (commentList.length > 0) setCommentDrawerOpen(true);
-
+  }
+  /** 削除ユーザ存在ボタンクリックイベント */
+  const onClickExistDeleteUsersButton = () => {
+    dialogOpen(MESSAGE.DIALOG_EXISTS_DELETE_USER_TITLE, MESSAGE.DIALOG_EXISTS_DELETE_USER_DETAIL);
   }
   /** 席削除ボタンクリックイベント　席アイコンを点滅状態にする */
   const onClickDeleteButton = () => {
@@ -187,6 +200,23 @@ const LeafletMain = (props, ref) => {
   useEffect(() => {
     getSeatList(selectSeatDate, selectFloor);
   }, [selectSeatDate, props.floor])
+
+  useEffect(() => {
+    const filter = seatList.filter(s => {
+      return (s.seat_date !== PERMANENT_DATE && s.sitting_flg === 0)
+       && s.comment_reply_count === 0
+       && s.seat_date !== null
+    });
+    let result = false;
+    if(formatDateToString(selectSeatDate) === formatDateToString(new Date())
+      && filter.length > 0
+      && isAfterHour(SITTING_CONFIRM_ALERT_TIME) 
+      && !isAfterHour(SITTING_CONFIRM_TIME)){
+      result = true;
+    }
+
+    setExistDeleteUsers(result);
+  }, [seatList])
   //呼び出し元からの参照
   useImperativeHandle(ref, () => ({
     /** App.jsで席日付が変更されたときに呼ばれる　席一覧を取得する */
@@ -326,6 +356,12 @@ const LeafletMain = (props, ref) => {
             }
           />
         }
+        {!props.admin && existDeleteUsers && SITTING_CONFIRM_ENABLE_FLG &&
+          <SideBarButton
+            onClick={onClickExistDeleteUsersButton}
+            icon={<PersonOffTwoToneIcon sx={{ color: "#d32f2f" }} className="my-icon blinking" />}
+          />
+        }
       </ButtonGroup>
       <TileLayer
         attribution='&copy; <a href="https://github.com/nomura565/">written by Yusuke Nomura</a>'
@@ -373,9 +409,17 @@ const LeafletMain = (props, ref) => {
               dateChangeYmd={props.dateChangeYmd}
               registedComment={seat.comment}
               sittingFlg={seat.sitting_flg}
+              commentReplyCount={seat.comment_reply_count}
             />
           );
         }
+      })}
+      {seatList.filter(s => s.comment_reply_count > 0).map((seat) => {
+        return (
+          <LeafletMarkerComment
+            position={seat.position}
+          />
+        )
       })}
       <LeafletDialog
         open={open}

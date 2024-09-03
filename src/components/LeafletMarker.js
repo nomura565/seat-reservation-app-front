@@ -6,7 +6,7 @@ import { TextField, Button, FormControlLabel, Checkbox, Tooltip as MaterialToolt
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
-import { API_URL, DATE_FORMAT, selectCommentSeatIdAtom, selectSeatDateAtom, commentListInitAtom, isLoadingAtom } from "./Const";
+import { API_URL, DATE_FORMAT, selectCommentSeatIdAtom, selectSeatDateAtom, commentListInitAtom, isLoadingAtom, SITTING_CONFIRM_TIME, SITTING_CONFIRM_ALERT_TIME, SITTING_ENABLE_FLG, SITTING_CONFIRM_ENABLE_FLG } from "./Const";
 import LeafletDialog from "./LeafletDialog";
 import Resizer from "react-image-file-resizer";
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
@@ -15,7 +15,7 @@ import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import { format } from 'react-string-format';
 import SeatCalendar from './SeatCalendar';
 import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
-import { formatDateToString, getDateStringForChache } from "./FormatDate";
+import { formatDateToString, getDateStringForChache, isAfterHour } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -23,6 +23,7 @@ import PersonOutlineTwoToneIcon from '@mui/icons-material/PersonOutlineTwoTone';
 import PersonOffTwoToneIcon from '@mui/icons-material/PersonOffTwoTone';
 import Grid from '@mui/material/Grid';
 import Avatar from '@mui/material/Avatar';
+import TextsmsOutlinedIcon from '@mui/icons-material/TextsmsOutlined';
 
 const LS_KEY = "seatResavationSystemUserName";
 
@@ -56,6 +57,8 @@ const MESSAGE = {
   DIALOG_UNSEAT_CONFIRM_DETAIL: "この座席を空席にしますか？",
   DIALOG_API_FAIL_SEAT_USE: "この座席に下記の登録がすでにあるため登録できません。",
   SITTING: "在席中と未在席を切り替える",
+  UNDESIRABLE_NAME: "個人使用の場合フルネームで登録してください",
+  USER_NAME_CONFIRM: "問題ないのでこの名前で登録する",
 }
 
 let currentLat = null;
@@ -70,29 +73,7 @@ const LeafletMarker = (props) => {
   const setIsLoading = useSetAtom(isLoadingAtom);
   //在席フラグ
   const [sittingFlg, setSittingFlg] = useState(props.sittingFlg);
-  //使用中アイコン
-  let iconClass = props.iconClass;
-  if (selectCommentSeatId === seatId) {
-    iconClass = "blinking";
-  }
 
-  const getnewIcon = (iconUrl) => {
-    return new icon({
-    iconUrl: `${iconUrl}?${getDateStringForChache()}`,
-    iconSize: [25, 25], // size of the icon
-    className: iconClass
-    });
-  }
-
-  const sittingIcon = getnewIcon(`sitting.png`);
-  //未在席アイコン
-  const sittingYetIcon = getnewIcon(`sitting_yet.png`);
-  //固定席アイコン
-  const sittingPermanentIcon = getnewIcon(`sitting_permanent.png`); 
-  //追加席アイコン
-  const sittingAddIcon = getnewIcon(`sitting_add.png`); 
-  //自由席アイコン
-  const sittingFreeIcon = getnewIcon(`sitting_free.png`); 
   /** 更新モード */
   const UpdateMode = {
     default: 1,
@@ -139,6 +120,8 @@ const LeafletMarker = (props) => {
   const [refreshFlg, setRefreshFlg] = useState(false);
   //固定席フラグ
   const [permanentFlg, setPermanentFlg] = useState(false);
+  //ユーザ名確認フラグ
+  const [userNameConfirmFlg, setUserNameConfirmFlg] = useState(true);
   //tooltipの表示向き　指摘がなければauto
   let tooltip_direction = props.tooltipDirection;
   if (tooltip_direction == null) {
@@ -164,6 +147,43 @@ const LeafletMarker = (props) => {
 
   const inputFileRef = useRef();
   const seatCalendarRef = useRef();
+
+  
+  //未在席のため削除される席の2時間前かを返す
+  const isDeleteSoonSeat = () => {
+    if (props.seatDate !== "add" && !props.admin && !props.isPermanent && useSeatFlg
+      && !sittingFlg && isAfterHour(SITTING_CONFIRM_ALERT_TIME) && !isAfterHour(SITTING_CONFIRM_TIME)
+      && props.commentReplyCount === 0){
+        return true;
+    } else {
+      return false;
+    }
+  }
+
+  const getNewIcon = (iconUrl) => {
+    let iconClass = props.iconClass;
+    if (SITTING_CONFIRM_ENABLE_FLG 
+      && (selectCommentSeatId === seatId || isDeleteSoonSeat())) {
+      iconClass = "blinking";
+    }
+    return new icon({
+    iconUrl: `${iconUrl}?${getDateStringForChache()}`,
+    iconSize: [25, 25], // size of the icon
+    className: iconClass
+    });
+  }
+
+  const sittingIcon = getNewIcon(`sitting.png`);
+  //未在席アイコン
+  const sittingYetIcon = getNewIcon(`sitting_yet.png`);
+  //未在席アイコン（もうすぐ削除）
+  const sittingYetDeleteSoonIcon = getNewIcon(`sitting_yet_delete_soon.png`);
+  //固定席アイコン
+  const sittingPermanentIcon = getNewIcon(`sitting_permanent.png`); 
+  //追加席アイコン
+  const sittingAddIcon = getNewIcon(`sitting_add.png`); 
+  //自由席アイコン
+  const sittingFreeIcon = getNewIcon(`sitting_free.png`); 
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -379,7 +399,50 @@ const LeafletMarker = (props) => {
   };
   const userNameChange = (e) => {
     setUserName(e.target.value);
+    if(isUnDesirableName(e.target.value)){
+      setUserNameValid(MESSAGE.UNDESIRABLE_NAME);
+      setUserNameConfirmFlg(false);
+    } else {
+      setUserNameValid("");
+    }
   }
+  //望ましくない名前かどうか判定
+  const isUnDesirableName = (value) => {
+    let result = false;
+    const trimValue = value.trim();
+    //2文字以下
+    if(trimValue.length !== 0 && trimValue.length <= 2){
+      result = true;
+    }
+    //漢字がない
+    if(trimValue.length !== 0 && !trimValue.match(/\p{sc=Han}/u)){
+      result = true;
+    }
+    //カタカナがある
+    if(trimValue.match((/[ァ-ンー]+/))){
+      result = true;
+    }
+    //カタカナがある
+    if(trimValue.match((/[ｦ-ﾟ]+/))){
+      result = true;
+    }
+    return result;
+  }
+
+  //望ましくない名前かどうか判定
+  const IsRegistButtonDisabled = () => {
+    let result = false;
+    if(userNameValid !== ""){
+      result = true;
+      if(userNameConfirmFlg){
+        result = false;
+      }
+    }
+
+    
+    return result;
+  }
+  const [userNameValid, setUserNameValid] = useState(!useSeatFlg && isUnDesirableName(userName)? MESSAGE.UNDESIRABLE_NAME : "");
 
   const toDateChange = (selectedDate) => {
     setToDate(selectedDate);
@@ -387,6 +450,10 @@ const LeafletMarker = (props) => {
 
   const handleChange = (e) => {
     setPermanentFlg(e.target.checked);
+  }
+
+  const userNameConfirmFlgChange = (e) => {
+    setUserNameConfirmFlg(e.target.checked);
   }
 
   const commentChange = (e) => {
@@ -438,7 +505,7 @@ const LeafletMarker = (props) => {
     }, 10);
   }
 
-  const mapEvents = useMapEvents({
+  useMapEvents({
     popupopen(e) {
       currentUpdateMode = UpdateMode.default;
       let _tmpDate = selectSeatDate;
@@ -447,6 +514,7 @@ const LeafletMarker = (props) => {
       setImageData(null);
       setIsPoppupOpen(true);
       setPermanentFlg(false);
+      setUserNameConfirmFlg(false);
     },
     popupclose(e) {
       if (currentUpdateMode === UpdateMode.default) {
@@ -454,6 +522,7 @@ const LeafletMarker = (props) => {
         let tmpDate = selectSeatDate;
         setFromDate(formatDateToString(tmpDate));
         setToDate(tmpDate);
+        setUserNameValid(!useSeatFlg && isUnDesirableName(defaultUserName)? MESSAGE.UNDESIRABLE_NAME : "")
       } else {
         currentUpdateMode = UpdateMode.default;
       }
@@ -472,9 +541,12 @@ const LeafletMarker = (props) => {
       return sittingPermanentIcon;
     }
     if (useSeatFlg) {
-      if (sittingFlg) {
+      if (!SITTING_ENABLE_FLG || sittingFlg) {
         return sittingIcon;
       } else {
+        if(SITTING_CONFIRM_ENABLE_FLG && isDeleteSoonSeat()){
+            return sittingYetDeleteSoonIcon;
+        }
         return sittingYetIcon;
       }
 
@@ -604,11 +676,14 @@ const LeafletMarker = (props) => {
 
   /**在席切替押下 */
   const onClickSittingButton = () => {
+    const formartSelectSeatDate = formatDateToString(selectSeatDate);
+    //当日でない場合切替不可
+    if(formartSelectSeatDate !== formatDateToString(new Date())) return;
     setIsLoading(true);
     const updateSittingFlg = (sittingFlg === 1) ? 0 : 1;
     axios
-      .post(API_URL.SITTNG_FLG_UPDATE, {
-        seat_date: formatDateToString(selectSeatDate),
+      .post(API_URL.SITTING_FLG_UPDATE, {
+        seat_date: formartSelectSeatDate,
         seat_id: seatId,
         sitting_flg: updateSittingFlg,
         used_name: (localStorage.getItem(LS_KEY)) ? localStorage.getItem(LS_KEY) : ""
@@ -628,6 +703,19 @@ const LeafletMarker = (props) => {
         InsertFail(error.message);
         return;
       });
+  }
+
+  /**テスト用アイコン */
+  const ShowTestIcon = () => {
+    return <div></div>;
+    return <div>
+      <TextsmsOutlinedIcon sx={{fontSize:"20px"}} />
+      <TextsmsOutlinedIcon sx={{fontSize:"20px", color:"#5cc3bb"}} />
+      <PersonOffTwoToneIcon sx={{fontSize:"35px"}} / >
+      <PersonOffTwoToneIcon sx={{fontSize:"35px", color:"#930000"}} / >
+      <PersonOutlineTwoToneIcon sx={{fontSize:"35px", color:"#5cc3bb"}} / >
+      <PersonOutlineTwoToneIcon sx={{fontSize:"35px", color:"#f2a986"}} / > 
+    </div>;
   }
 
   return (
@@ -650,6 +738,7 @@ const LeafletMarker = (props) => {
             autoComplete="off"
           >
             <Grid container alignItems="center" rowSpacing={0.5} >
+              <ShowTestIcon / >
               <Grid item xs={12}>
                 {!useSeatFlg &&
                   <div>
@@ -672,7 +761,7 @@ const LeafletMarker = (props) => {
                   {props.image != null && (<Avatar src={props.image} alt="icon" sx={{ width: 100, height: 100 }} />)}
                 </div>
               </Grid>
-              <Grid item xs={10}>
+              <Grid item xs={10} sx={{height:"70px"}}>
                 <TextField
                   disabled={useSeatFlg}
                   name="userName"
@@ -681,10 +770,11 @@ const LeafletMarker = (props) => {
                   label={MESSAGE.NAME}
                   variant="standard"
                   size="small"
+                  helperText={userNameValid}
                 />
               </Grid>
               <Grid item xs={2}>
-                {(useSeatFlg && !props.isPermanent) &&
+                {(SITTING_ENABLE_FLG && useSeatFlg && !props.isPermanent) &&
                   <MaterialTooltip placement="right" title={MESSAGE.SITTING}>
                     <Button className="sitting-button" onClick={onClickSittingButton}>
                       {sittingFlg
@@ -695,6 +785,24 @@ const LeafletMarker = (props) => {
                       }
                     </Button>
                   </MaterialTooltip>
+                }
+              </Grid>
+              <Grid item xs={12}>
+                {!useSeatFlg && userNameValid !== "" &&
+                  <FormControlLabel 
+                    control={
+                      <Checkbox checked={userNameConfirmFlg} onChange={userNameConfirmFlgChange} size="small" />
+                    } 
+                    label={MESSAGE.USER_NAME_CONFIRM} 
+                    sx={{
+                      paddingLeft:"7px",
+                      '& .MuiTypography-root': {
+                        fontSize:"0.5rem",
+                        color:"#d32f2f",
+                        fontWeight:"bold"
+                      }
+                    }}
+                  />
                 }
               </Grid>
               {!useSeatFlg &&
@@ -783,7 +891,7 @@ const LeafletMarker = (props) => {
               <Grid item xs={8}>
                 {!useSeatFlg
                   ?
-                  <Button variant="outlined" startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
+                  <Button variant="outlined" disabled={IsRegistButtonDisabled()} startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
                   :
                   <MaterialTooltip placement="right" title={props.isPermanent ? "" : MESSAGE.UNSEAT_TOOLTIP_TITLE}>
                     <Button variant="outlined" disabled={sittingFlg} startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>

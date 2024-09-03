@@ -84,3 +84,19 @@ export const getDateStringForChache = () => {
     locale: ja,
   });
 }
+
+/** 現在が引数の時以降かを返す */
+export const isAfterHour = (HHmm) => {
+  const d = new Date();
+  const formatD = Number(format(
+    d,
+    "HHmm", {
+    locale: ja,
+  }));
+
+  if(formatD > HHmm){
+    return true;
+  } else {
+    return false;
+  }
+}
