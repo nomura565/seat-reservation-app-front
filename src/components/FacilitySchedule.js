@@ -44,7 +44,7 @@ const FacilitySchedule = (props) => {
   }
   //セレクト時コールバック
   const onSelectSlot = useCallback((slotInfo) => {
-    console.log(slotInfo);
+    //console.log(slotInfo);
   }, [selectFacilityId]);
   //日付変更時コールバック
   const onNavigate = useCallback((newDate) => {
@@ -93,7 +93,6 @@ const FacilitySchedule = (props) => {
     //calendar.subject
     let attendeesNames = calendar.attendees.map(a => a.name);
     let attendees = attendeesNames.join("、");
-    console.log(attendeesNames.length);
     if (attendeesNames.length > 3) {
       attendeesNames = attendeesNames.slice(0, 3);
       attendees = `${attendeesNames.join("、")}${MESSAGE.ATTENDEES_OTHER}`;

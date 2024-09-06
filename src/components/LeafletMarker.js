@@ -6,7 +6,10 @@ import { TextField, Button, FormControlLabel, Checkbox, Tooltip as MaterialToolt
 import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import axios from "axios";
-import { API_URL, DATE_FORMAT, selectCommentSeatIdAtom, selectSeatDateAtom, commentListInitAtom, isLoadingAtom, SITTING_CONFIRM_TIME, SITTING_CONFIRM_ALERT_TIME, SITTING_ENABLE_FLG, SITTING_CONFIRM_ENABLE_FLG } from "./Const";
+import { API_URL, DATE_FORMAT, zoomAtom, selectCommentSeatIdAtom, selectSeatDateAtom
+  , availableDrawerOpenAtom, availableToDateAtom, commentListInitAtom, isLoadingAtom
+  , SITTING_CONFIRM_TIME, SITTING_CONFIRM_ALERT_TIME
+  , SITTING_ENABLE_FLG, SITTING_CONFIRM_ENABLE_FLG } from "./Const";
 import LeafletDialog from "./LeafletDialog";
 import Resizer from "react-image-file-resizer";
 import FaceRetouchingNaturalIcon from '@mui/icons-material/FaceRetouchingNatural';
@@ -18,7 +21,7 @@ import CalendarMonthTwoToneIcon from '@mui/icons-material/CalendarMonthTwoTone';
 import { formatDateToString, getDateStringForChache, isAfterHour } from "./FormatDate";
 import AddCommentTwoToneIcon from '@mui/icons-material/AddCommentTwoTone';
 import CommentTextField from "./CommentTextField";
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom, useAtom } from 'jotai';
 import PersonOutlineTwoToneIcon from '@mui/icons-material/PersonOutlineTwoTone';
 import PersonOffTwoToneIcon from '@mui/icons-material/PersonOffTwoTone';
 import Grid from '@mui/material/Grid';
@@ -73,6 +76,8 @@ const LeafletMarker = (props) => {
   const setIsLoading = useSetAtom(isLoadingAtom);
   //在席フラグ
   const [sittingFlg, setSittingFlg] = useState(props.sittingFlg);
+
+  const availableDrawerOpen = useAtomValue(availableDrawerOpenAtom);
 
   /** 更新モード */
   const UpdateMode = {
@@ -145,10 +150,13 @@ const LeafletMarker = (props) => {
   //リプライ一覧
   const [replyList, setReplyList] = useState(tmpReplyList);
 
+  const [zoom, setZoom] = useAtom(zoomAtom);
+
+  const availableToDate = useAtomValue(availableToDateAtom);
+
   const inputFileRef = useRef();
   const seatCalendarRef = useRef();
 
-  
   //未在席のため削除される席の2時間前かを返す
   const isDeleteSoonSeat = () => {
     if (props.seatDate !== "add" && !props.admin && !props.isPermanent && useSeatFlg
@@ -166,9 +174,13 @@ const LeafletMarker = (props) => {
       && (selectCommentSeatId === seatId || isDeleteSoonSeat())) {
       iconClass = "blinking";
     }
+    if(!props.isPermanent && !useSeatFlg && availableDrawerOpen && props.isAvailable){
+      iconClass = "blinking";
+    }
+
     return new icon({
     iconUrl: `${iconUrl}?${getDateStringForChache()}`,
-    iconSize: [25, 25], // size of the icon
+    iconSize: [25 + zoom * 10, 25 + zoom * 10], // size of the icon
     className: iconClass
     });
   }
@@ -184,6 +196,8 @@ const LeafletMarker = (props) => {
   const sittingAddIcon = getNewIcon(`sitting_add.png`); 
   //自由席アイコン
   const sittingFreeIcon = getNewIcon(`sitting_free.png`); 
+  //使用不可席アイコン
+  const sittingUnavailableIcon = getNewIcon(`sitting_unavailble.png`); 
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -505,12 +519,12 @@ const LeafletMarker = (props) => {
     }, 10);
   }
 
-  useMapEvents({
+  const map = useMapEvents({
     popupopen(e) {
       currentUpdateMode = UpdateMode.default;
       let _tmpDate = selectSeatDate;
       setFromDate(formatDateToString(_tmpDate));
-      setToDate(_tmpDate);
+      setToDate((availableDrawerOpen) ? availableToDate : _tmpDate);
       setImageData(null);
       setIsPoppupOpen(true);
       setPermanentFlg(false);
@@ -527,6 +541,9 @@ const LeafletMarker = (props) => {
         currentUpdateMode = UpdateMode.default;
       }
       setIsPoppupOpen(false);
+    },
+    zoomanim(e) {
+      setZoom((map.getZoom() === 0 ? 1 : 0));
     }
   })
 
@@ -551,6 +568,9 @@ const LeafletMarker = (props) => {
       }
 
     } else {
+      if(availableDrawerOpen && !props.isAvailable){
+        return sittingUnavailableIcon;
+      }
       return sittingFreeIcon;
     }
   }
@@ -709,6 +729,7 @@ const LeafletMarker = (props) => {
   const ShowTestIcon = () => {
     return <div></div>;
     return <div>
+      <ChairAltIcon sx={{fontSize:"35px", color:"#930000"}} />
       <TextsmsOutlinedIcon sx={{fontSize:"20px"}} />
       <TextsmsOutlinedIcon sx={{fontSize:"20px", color:"#5cc3bb"}} />
       <PersonOffTwoToneIcon sx={{fontSize:"35px"}} / >
@@ -718,9 +739,18 @@ const LeafletMarker = (props) => {
     </div>;
   }
 
+  const isPermanent = () => {
+    return props.tooltipPermanent && (admin || useSeatFlg);
+  }
+
   return (
     <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
-      <Tooltip direction={tooltipDirection} permanent={props.tooltipPermanent && (admin || useSeatFlg)}><b>{admin ? seatId : popupText}{props.isPermanent ? "" : ""}</b></Tooltip>
+      {zoom === 0 &&
+        <Tooltip direction={tooltipDirection} permanent={isPermanent()}><b>{admin ? seatId : popupText}</b></Tooltip>
+      }
+      {zoom === 1 &&
+        <Tooltip className="tooltip" direction={tooltipDirection} permanent={isPermanent()}><b>{admin ? seatId : popupText}</b></Tooltip>
+      }
       {admin
         ? ""
         :
@@ -894,7 +924,7 @@ const LeafletMarker = (props) => {
                   <Button variant="outlined" disabled={IsRegistButtonDisabled()} startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
                   :
                   <MaterialTooltip placement="right" title={props.isPermanent ? "" : MESSAGE.UNSEAT_TOOLTIP_TITLE}>
-                    <Button variant="outlined" disabled={sittingFlg} startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
+                    <Button variant="outlined" disabled={(sittingFlg === 1)} startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
                   </MaterialTooltip>
                 }
               </Grid>

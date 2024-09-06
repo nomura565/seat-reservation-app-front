@@ -3,7 +3,9 @@ import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'rea
 import { MapContainer, TileLayer, ImageOverlay  } from 'react-leaflet';
 import LeafletMarker from './LeafletMarker';
 import axios from "axios";
-import { API_URL, PERMANENT_DATE, SITTING_CONFIRM_TIME, SITTING_CONFIRM_ALERT_TIME, SITTING_CONFIRM_ENABLE_FLG, commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom, isLoadingAtom, existDeleteUsersAtom } from "./Const";
+import { API_URL, PERMANENT_DATE, SITTING_CONFIRM_TIME, SITTING_CONFIRM_ALERT_TIME, SITTING_CONFIRM_ENABLE_FLG
+  , commentDrawerOpenAtom, commentListAtom, selectFloorAtom, selectSeatDateAtom, isLoadingAtom, seatListAtom
+  , existDeleteUsersAtom, zoomAtom, availableDrawerOpenAtom } from "./Const";
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
@@ -18,6 +20,7 @@ import LeafletMarkerFacility from './LeafletMarkerFacility';
 import SideBarButton from './SideBarButton';
 import PersonOffTwoToneIcon from '@mui/icons-material/PersonOffTwoTone';
 import LeafletMarkerComment from "./LeafletMarkerComment";
+import DateRangeIcon from '@mui/icons-material/DateRange';
 
 const formatTime = (value) => {
   value = value.toString();
@@ -61,9 +64,8 @@ const LeafletMain = (props, ref) => {
   const anotherBounds = new LatLngBounds([0, 0], [600, 735]);
   const [bounds, setBounds] = useState(defaultBounds);
 
-  let tmpSeatList = [];
   //席一覧
-  const [seatList, setSeatList] = useState(tmpSeatList);
+  const [seatList, setSeatList] = useAtom(seatListAtom);
   //Tooltipを常に表示するかどうかのフラグ 管理モードだと常に表示
   const [tooltipPermanent, setTooltipPermanent] = useState(true);
   //dialogをオープンするかのフラグ
@@ -91,6 +93,10 @@ const LeafletMain = (props, ref) => {
   const setIsLoading = useSetAtom(isLoadingAtom);
 
   const [existDeleteUsers, setExistDeleteUsers] = useAtom(existDeleteUsersAtom);
+
+  const zoom = useAtomValue(zoomAtom);
+
+  const [availableDrawerOpen, setAvailableDrawerOpen] = useAtom(availableDrawerOpenAtom);
   /** 現在のセレクトボックスの値から席一覧を取得する　LeafletMarker.jsからも参照 */
   const getCurrentSeatList = () => {
     return getSeatList(selectSeatDate, selectFloor);
@@ -133,6 +139,10 @@ const LeafletMain = (props, ref) => {
   /** コメントボタンクリックイベント */
   const onClickCommentButton = () => {
     if (commentList.length > 0) setCommentDrawerOpen(true);
+  }
+  /** 使用可能確認ボタンクリックイベント */
+  const onClickAvailableButton = () => {
+    setAvailableDrawerOpen(!availableDrawerOpen);
   }
   /** 削除ユーザ存在ボタンクリックイベント */
   const onClickExistDeleteUsersButton = () => {
@@ -310,7 +320,7 @@ const LeafletMain = (props, ref) => {
     <MapContainer
       crs={CRS.Simple}
       center={centerLatLng}
-      zoom={0}
+      zoom={zoom}
       maxZoom={1}
       ref={m => {
         setMap(m);
@@ -336,9 +346,15 @@ const LeafletMain = (props, ref) => {
           :
           <SideBarButton
             onClick={onClickMyBadgeButton}
-            icon={<VisibilityOffIcon className="my-icon" />}
+            icon={<VisibilityOffIcon className="my-icon" sx={{ color: (!tooltipPermanent) ? "#44b700" : "" }} />}
           />
         }
+        {!props.admin && (
+          <SideBarButton
+            onClick={onClickAvailableButton}
+            icon={<DateRangeIcon className="my-icon" sx={{ color: (availableDrawerOpen) ? "#44b700" : "" }} />}
+          />
+        )}
         {props.admin
           ?
           <SideBarButton
@@ -410,6 +426,7 @@ const LeafletMain = (props, ref) => {
               registedComment={seat.comment}
               sittingFlg={seat.sitting_flg}
               commentReplyCount={seat.comment_reply_count}
+              isAvailable={seat.is_available}
             />
           );
         }
@@ -417,6 +434,7 @@ const LeafletMain = (props, ref) => {
       {seatList.filter(s => s.comment_reply_count > 0).map((seat) => {
         return (
           <LeafletMarkerComment
+            key={seat.key}
             position={seat.position}
           />
         )

@@ -62,8 +62,8 @@ const CommentDrawer = (props) => {
     <Box sx={{ width: 250 }} role="presentation">
       <List>
         {commentList.map((comment, idx) => (
-          <div>
-            <ListItemButton key={comment.key} onClick={() => setSelectCommentSeatId(comment.seat_id)}>
+          <div key={`${comment.key}_${idx}`}>
+            <ListItemButton onClick={() => setSelectCommentSeatId(comment.seat_id)}>
               <ListItemIcon>
                 <ChairAltIcon />
               </ListItemIcon>

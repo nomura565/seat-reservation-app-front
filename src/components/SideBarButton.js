@@ -8,7 +8,7 @@ const SideBarButton = (props) => {
       variant="outlined"
       size="small"
       className={className}
-      onClick={props.onClick}>
+      onClick={(e) => props.onClick(e)}>
       {props.icon}
     </Button>
   )

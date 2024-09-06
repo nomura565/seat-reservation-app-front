@@ -20,6 +20,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import FacilitySchedule from './components/FacilitySchedule';
 import Progress from './components/Progress';
 import Grid from '@mui/material/Grid';
+import AvailableDrawer from './components/AvailableDrawer';
 
 /** メッセージ */
 const MESSAGE = {
@@ -137,6 +138,7 @@ const App = () => {
         dateChangeYmd={dateChangeYmd}
       />
       <CommentDrawer / >
+      <AvailableDrawer / >
       <FacilitySchedule />
       <Progress />
     </div>

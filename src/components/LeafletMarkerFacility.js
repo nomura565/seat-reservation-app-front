@@ -1,8 +1,9 @@
 import { icon } from 'leaflet';
 import React, { useState, useEffect, useRef } from 'react';
-import { Marker, Tooltip } from 'react-leaflet';
-import { API_URL, selectSeatDateAtom, facilityScheduleOpenAtom, selectFacilityIdAtom, selectFloorAtom, isLoadingAtom } from "./Const";
-import { useAtomValue, useSetAtom } from 'jotai';
+import { Marker, Tooltip, useMapEvents } from 'react-leaflet';
+import { API_URL, zoomAtom, selectSeatDateAtom, facilityScheduleOpenAtom, selectFacilityIdAtom
+  , selectFloorAtom, isLoadingAtom } from "./Const";
+import { useAtomValue, useSetAtom, useAtom } from 'jotai';
 import "react-datetime/css/react-datetime.css";
 
 import axios from "axios";
@@ -18,6 +19,7 @@ const LeafletMarkerFacility = (props) => {
   const setIsLoading = useSetAtom(isLoadingAtom);
   const selectSeatDate = useAtomValue(selectSeatDateAtom);
   const selectFloor = useAtomValue(selectFloorAtom);
+  const [zoom, setZoom] = useAtom(zoomAtom);
   //席の位置座標
   const [position, setPosition] = useState(props.position);
   //席ID
@@ -30,7 +32,7 @@ const LeafletMarkerFacility = (props) => {
   //自由席アイコン
   const freeIcon = new icon({
     iconUrl: 'facility2.png',
-    iconSize: [48, 34], // size of the icon
+    iconSize: [48 + zoom * 10, 34 + zoom * 10], // size of the icon
     className: iconClass
   });
 
@@ -69,7 +71,6 @@ const LeafletMarkerFacility = (props) => {
       .then((response) => {
         setIsLoading(false);
         if (response.status === 200) {
-          //console.log(response.data);
           setPopupText(`${response.data.events[0].subject} ${MESSAGE.NOW_MEETING}`);
         } else {
           setPopupText(MESSAGE.NO_MEETING);
@@ -106,13 +107,25 @@ const LeafletMarkerFacility = (props) => {
     }
   }
 
+  const map = useMapEvents({
+    zoomanim(e) {
+      setZoom((map.getZoom() === 0 ? 1 : 0));
+    }
+  })
+
   const getIcon = () => {
     return freeIcon;
   }
 
   return (
     <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
-      <Tooltip direction={tooltipDirection} permanent={true}><b>{admin ? seatId : popupText}</b></Tooltip>
+      {zoom === 0 &&
+        <Tooltip direction={tooltipDirection} permanent={true}><b>{admin ? seatId : popupText}</b></Tooltip>
+      }
+      {zoom === 1 &&
+        <Tooltip className="tooltip" direction={tooltipDirection} permanent={true}><b>{admin ? seatId : popupText}</b></Tooltip>
+      }
+      
     </Marker>
   )
 }

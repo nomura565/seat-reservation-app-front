@@ -12,6 +12,11 @@ export const facilityScheduleOpenAtom = atom(false);
 export const selectFacilityIdAtom = atom(null);
 export const isLoadingAtom = atom(false);
 export const existDeleteUsersAtom = atom(false);
+export const zoomAtom = atom(0);
+export const zoomTooltipClassAtom = atom("");
+export const availableDrawerOpenAtom = atom(false);
+export const seatListAtom = atom([]);
+export const availableToDateAtom = atom(null);
 
 export const DATE_FORMAT = "yyyy/MM/DD";
 export const PERMANENT_DATE = "XXXX/XX/XX";
@@ -38,4 +43,5 @@ export const API_URL = {
   GAROON_SCHEDULE_SELECT: process.env.REACT_APP_BASE_URL + "garoonScheduleSelect",
   SITTING_FLG_UPDATE: process.env.REACT_APP_BASE_URL + "sittingFlgUpdate",
   SITTING_CONFIRM: process.env.REACT_APP_BASE_URL + "sittingConfirm",
+  GET_UNAVAILABLE_SEAT_LIST: process.env.REACT_APP_BASE_URL + "getUnavailableSeatList",
 }
