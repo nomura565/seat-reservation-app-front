@@ -924,7 +924,7 @@ const LeafletMarker = (props) => {
                   <Button variant="outlined" disabled={IsRegistButtonDisabled()} startIcon={<ChairAltIcon />} onClick={() => onClickSeatRegistButton()}>{MESSAGE.SEAT_REGIST_BUTTON}</Button>
                   :
                   <MaterialTooltip placement="right" title={props.isPermanent ? "" : MESSAGE.UNSEAT_TOOLTIP_TITLE}>
-                    <Button variant="outlined" disabled={(sittingFlg === 1)} startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
+                    <Button variant="outlined" disabled={(!props.isPermanent && sittingFlg === 1)} startIcon={<PersonRemoveIcon />} onClick={() => onClickUnSeatRegistButton()}>{MESSAGE.UNSEAT_REGIST_BUTTON}</Button>
                   </MaterialTooltip>
                 }
               </Grid>
