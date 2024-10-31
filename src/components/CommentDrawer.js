@@ -8,7 +8,8 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { useAtom, useSetAtom, useAtomValue } from 'jotai';
-import { API_URL, commentDrawerOpenAtom, selectSeatDateAtom, commentListAtom, selectCommentSeatIdAtom, selectFloorAtom, commentListInitAtom } from "./Const";
+import { API_URL, commentDrawerOpenAtom, selectSeatDateAtom, commentListAtom
+  , selectCommentSeatIdAtom, selectFloorAtom, commentListInitAtom, availableDrawerOpenAtom } from "./Const";
 import axios from "axios";
 import Collapse from '@mui/material/Collapse';
 import MarkUnreadChatAltIcon from '@mui/icons-material/MarkUnreadChatAlt';
@@ -27,9 +28,11 @@ const CommentDrawer = (props) => {
   const selectSeatDate = useAtomValue(selectSeatDateAtom);
   const setSelectCommentSeatId = useSetAtom(selectCommentSeatIdAtom);
   const selectFloor = useAtomValue(selectFloorAtom);
+  const setAvailableDrawerOpen = useSetAtom(availableDrawerOpenAtom);
 
   useEffect(() => {
     commentSelect();
+    setAvailableDrawerOpen(false);
   }, [selectSeatDate, selectFloor, commentListInit]);
 
   useEffect(() => {

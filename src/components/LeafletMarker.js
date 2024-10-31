@@ -8,6 +8,7 @@ import "react-datetime/css/react-datetime.css";
 import axios from "axios";
 import { API_URL, DATE_FORMAT, zoomAtom, selectCommentSeatIdAtom, selectSeatDateAtom
   , availableDrawerOpenAtom, availableToDateAtom, commentListInitAtom, isLoadingAtom
+  , seatListAtom
   , SITTING_CONFIRM_TIME, SITTING_CONFIRM_ALERT_TIME
   , SITTING_ENABLE_FLG, SITTING_CONFIRM_ENABLE_FLG } from "./Const";
 import LeafletDialog from "./LeafletDialog";
@@ -78,6 +79,8 @@ const LeafletMarker = (props) => {
   const [sittingFlg, setSittingFlg] = useState(props.sittingFlg);
 
   const availableDrawerOpen = useAtomValue(availableDrawerOpenAtom);
+
+  const [seatList, setSeatList] = useAtom(seatListAtom);
 
   /** 更新モード */
   const UpdateMode = {
@@ -637,6 +640,15 @@ const LeafletMarker = (props) => {
           getReplyList(false);
           setReplyComment("");
           setCommentListInit((prevCount) => prevCount + 1);
+          console.log(seatList);
+          //コメントの吹き出しを即時反映させるためリスト更新
+          const tmpSeatList = seatList.map(s => {
+            if(s.seat_id === seatId) {
+              s.comment_reply_count = s.comment_reply_count + 1;
+            }
+            return s;
+          });
+          setSeatList(tmpSeatList);
         } else {
           InsertFail(MESSAGE.API_RESPONSE_UNEXPECT);
           return;
