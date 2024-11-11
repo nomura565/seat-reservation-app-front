@@ -10,8 +10,19 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-import { TextField } from "@mui/material";
+import { TextField, Tooltip } from "@mui/material";
 import Checkbox from '@mui/material/Checkbox';
+
+/** メッセージ */
+const MESSAGE = {
+  SEAT_ID: "シートID",
+  SEAT_NAME: "シート名",
+  SEAT_NAME_EXPLAINATION: "画面には表示されません。管理画面でのメモ用項目です。",
+  TOOLTIP_DIRRECTION: "ツールチップの方向",
+  FACILITY_FLG: "施設フラグ",
+  FACILITY_FLG_EXPLAINATION: "フラグONの場合、通常の座席ではなく施設IDのガルーンの施設と連携します。",
+  FACILITY_ID: "施設ID",
+}
 
 const SeatList = (props) => {
   //席一覧
@@ -63,11 +74,15 @@ const SeatList = (props) => {
       <Table aria-label="simple table">
         <TableHead>
           <TableRow>
-            <TableCell>シートID</TableCell>
-            <TableCell align="left">シート名</TableCell>
-            <TableCell align="left">ツールチップの方向</TableCell>
-            <TableCell align="left">施設フラグ</TableCell>
-            <TableCell align="left">施設ID</TableCell>
+            <TableCell>{MESSAGE.SEAT_ID}</TableCell>
+            <Tooltip placement="bottom" title={MESSAGE.SEAT_NAME_EXPLAINATION}>
+              <TableCell align="left">{MESSAGE.SEAT_NAME}</TableCell>
+              </Tooltip>
+            <TableCell align="left">{MESSAGE.TOOLTIP_DIRRECTION}</TableCell>
+            <Tooltip placement="bottom" title={MESSAGE.FACILITY_FLG_EXPLAINATION}>
+              <TableCell align="left">{MESSAGE.FACILITY_FLG}</TableCell>
+              </Tooltip>
+            <TableCell align="left">{MESSAGE.FACILITY_ID}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
