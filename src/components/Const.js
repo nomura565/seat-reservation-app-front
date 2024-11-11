@@ -45,3 +45,5 @@ export const API_URL = {
   SITTING_CONFIRM: process.env.REACT_APP_BASE_URL + "sittingConfirm",
   GET_UNAVAILABLE_SEAT_LIST: process.env.REACT_APP_BASE_URL + "getUnavailableSeatList",
 }
+
+export const TOOLTIP_DIRRECTION = ["", "top", "bottom", "left", "right"];

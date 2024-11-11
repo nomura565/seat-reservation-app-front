@@ -21,6 +21,7 @@ import FacilitySchedule from './components/FacilitySchedule';
 import Progress from './components/Progress';
 import Grid from '@mui/material/Grid';
 import AvailableDrawer from './components/AvailableDrawer';
+import SeatList from './components/SeatList';
 
 /** メッセージ */
 const MESSAGE = {
@@ -140,6 +141,7 @@ const App = () => {
       <CommentDrawer / >
       <AvailableDrawer / >
       <FacilitySchedule />
+      {admin && <SeatList />}
       <Progress />
     </div>
   );

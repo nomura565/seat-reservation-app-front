@@ -431,7 +431,7 @@ const LeafletMain = (props, ref) => {
           );
         }
       })}
-      {seatList.filter(s => s.comment_reply_count > 0).map((seat) => {
+      {!props.admin && seatList.filter(s => s.comment_reply_count > 0).map((seat) => {
         return (
           <LeafletMarkerComment
             key={seat.key}

@@ -40,3 +40,12 @@
 .tooltip {
   font-size: 1.5rem;
 }
+
+.admin-seat-list-table {
+  position: fixed;
+  top: 0px;
+  left: 1000px;
+  overflow-y: auto;
+  height:800px;
+  width: 850px !important;
+}
