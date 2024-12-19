@@ -193,7 +193,7 @@ const LeafletMarker = (props) => {
   }
 
   let sittingIconSrc = `sitting.png`;
-  let sittingPermanentIconSrc = `sitting.png`;
+  let sittingPermanentIconSrc = `sitting_permanent.png`;
   let casheClearFlg = true;
   //imageが登録されていればimageを表示
   if(!isNullOrEmpty(props.image)){
