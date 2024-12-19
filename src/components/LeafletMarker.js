@@ -28,8 +28,11 @@ import PersonOffTwoToneIcon from '@mui/icons-material/PersonOffTwoTone';
 import Grid from '@mui/material/Grid';
 import Avatar from '@mui/material/Avatar';
 import TextsmsOutlinedIcon from '@mui/icons-material/TextsmsOutlined';
+import CancelIcon from '@mui/icons-material/Cancel';
+import { isNullOrEmpty } from './CommonFunc';
 
 const LS_KEY = "seatResavationSystemUserName";
+const LS_KEY2 = "seatResavationSystemImage";
 
 /** メッセージ */
 const MESSAGE = {
@@ -98,7 +101,7 @@ const LeafletMarker = (props) => {
   //toolipで使う名前
   let user_name = props.userName;
   //初期状態だとnullとなり表示にnullと出てしまうので対応
-  if (name == null) {
+  if (isNullOrEmpty(name)) {
     //クッキーに名前があればそれをdialogで使う名前にする
     user_name = (localStorage.getItem(LS_KEY)) ? localStorage.getItem(LS_KEY) : "";
     flg = false;
@@ -132,7 +135,7 @@ const LeafletMarker = (props) => {
   const [userNameConfirmFlg, setUserNameConfirmFlg] = useState(true);
   //tooltipの表示向き　指摘がなければauto
   let tooltip_direction = props.tooltipDirection;
-  if (tooltip_direction == null) {
+  if (isNullOrEmpty(tooltip_direction)) {
     tooltip_direction = "auto";
   }
   const [tooltipDirection] = useState(tooltip_direction);
@@ -171,7 +174,7 @@ const LeafletMarker = (props) => {
     }
   }
 
-  const getNewIcon = (iconUrl) => {
+  const getNewIcon = (iconUrl, casheClearFlg = true) => {
     let iconClass = props.iconClass;
     if (SITTING_CONFIRM_ENABLE_FLG 
       && (selectCommentSeatId === seatId || isDeleteSoonSeat())) {
@@ -180,21 +183,32 @@ const LeafletMarker = (props) => {
     if(!props.isPermanent && !useSeatFlg && availableDrawerOpen && props.isAvailable){
       iconClass = "blinking";
     }
+    const casheClear = casheClearFlg ? `?${getDateStringForChache()}` : ``;
 
     return new icon({
-    iconUrl: `${iconUrl}?${getDateStringForChache()}`,
+    iconUrl: `${iconUrl}${casheClear}`,
     iconSize: [25 + zoom * 10, 25 + zoom * 10], // size of the icon
     className: iconClass
     });
   }
 
-  const sittingIcon = getNewIcon(`sitting.png`);
+  let sittingIconSrc = `sitting.png`;
+  let sittingPermanentIconSrc = `sitting.png`;
+  let casheClearFlg = true;
+  //imageが登録されていればimageを表示
+  if(!isNullOrEmpty(props.image)){
+    sittingIconSrc = props.image;
+    sittingPermanentIconSrc = props.image;
+    casheClearFlg = false;
+  }
+
+  const sittingIcon = getNewIcon(sittingIconSrc, casheClearFlg);
   //未在席アイコン
   const sittingYetIcon = getNewIcon(`sitting_yet.png`);
   //未在席アイコン（もうすぐ削除）
   const sittingYetDeleteSoonIcon = getNewIcon(`sitting_yet_delete_soon.png`);
   //固定席アイコン
-  const sittingPermanentIcon = getNewIcon(`sitting_permanent.png`); 
+  const sittingPermanentIcon = getNewIcon(sittingPermanentIconSrc, casheClearFlg);
   //追加席アイコン
   const sittingAddIcon = getNewIcon(`sitting_add.png`); 
   //自由席アイコン
@@ -246,6 +260,11 @@ const LeafletMarker = (props) => {
       }
     } else {
       localStorage.setItem(LS_KEY, userName);
+      if(isNullOrEmpty(imageData)){
+        localStorage.removeItem(LS_KEY2);
+      } else {
+        localStorage.setItem(LS_KEY2, imageData);
+      }
     }
 
     setUserName(_userName);
@@ -306,9 +325,9 @@ const LeafletMarker = (props) => {
     let _fromDate = fromDate;
     let _toDate = formatToDateAndValidDate();
 
-    if (_toDate == null) return;
+    if (isNullOrEmpty(_toDate)) return;
 
-    let _temp = (userName === null) ? "" : userName;
+    let _temp = (isNullOrEmpty(userName)) ? "" : userName;
     if (_temp.trim() === "") {
       dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_NAME_EMPTY);
       return;
@@ -329,7 +348,7 @@ const LeafletMarker = (props) => {
         to_date: _toDate,
         user_name: userName,
         permanent_flg: permanentFlg,
-        image_data: imageData,
+        image_data: isNullOrEmpty(imageData)?null:imageData,
         comment: comment
       })
       .then((response) => {
@@ -383,7 +402,7 @@ const LeafletMarker = (props) => {
     let _selectedDate = formatDateToString(selectSeatDate);
     let _toDate = formatToDateAndValidDate();
 
-    if (_toDate == null) return;
+    if (isNullOrEmpty(_toDate)) return;
 
     const sendData = {
       seat_id: seatId,
@@ -528,7 +547,7 @@ const LeafletMarker = (props) => {
       let _tmpDate = selectSeatDate;
       setFromDate(formatDateToString(_tmpDate));
       setToDate((availableDrawerOpen) ? availableToDate : _tmpDate);
-      setImageData(null);
+      setImageData(localStorage.getItem(LS_KEY2));
       setIsPoppupOpen(true);
       setPermanentFlg(false);
       setUserNameConfirmFlg(false);
@@ -623,7 +642,7 @@ const LeafletMarker = (props) => {
   /**返信送信ボタン押下イベント */
   const onClickReplySendButton = () => {
     //バリデーションチェック
-    if (replyComment === null || replyComment.trim() === "") {
+    if (isNullOrEmpty(replyComment) || replyComment.trim() === "") {
       dialogOpen(MESSAGE.DIALOG_VALID_FAIL_TITLE, MESSAGE.DIALOG_VALID_FAIL_DETAIL_REPLY_EMPTY);
       return;
     }
@@ -640,7 +659,6 @@ const LeafletMarker = (props) => {
           getReplyList(false);
           setReplyComment("");
           setCommentListInit((prevCount) => prevCount + 1);
-          console.log(seatList);
           //コメントの吹き出しを即時反映させるためリスト更新
           const tmpSeatList = seatList.map(s => {
             if(s.seat_id === seatId) {
@@ -681,10 +699,10 @@ const LeafletMarker = (props) => {
           if (!useSeatFlg) {
             _adjustLat = _adjustLat + 80;
           } else {
-            if (props.image !== null) {
+            if (!isNullOrEmpty(props.image)) {
               _adjustLat = _adjustLat + 90;
             }
-            if (props.registedComment !== null) {
+            if (!isNullOrEmpty(props.registedComment)) {
               _adjustLat = _adjustLat + 60;
             }
             if (response.data.length === 1) {
@@ -755,6 +773,11 @@ const LeafletMarker = (props) => {
     return props.tooltipPermanent && (admin || useSeatFlg);
   }
 
+  const clearImageData = () => {
+    setImageData("");
+    setViewCurrentLatlng(currentLat, currentLng);
+  }
+
   return (
     <Marker ref={markerRef} draggable={admin} eventHandlers={eventHandlers} position={props.position} icon={getIcon()}>
       {zoom === 0 &&
@@ -793,14 +816,15 @@ const LeafletMarker = (props) => {
                         hidden ref={inputFileRef}
                         onChange={(e) => onFileChange(e)}
                       />
-                      <div>
-                        {imageData != null && (<Avatar src={imageData} alt="tmp_icon" sx={{ width: 100, height: 100 }} />)}
+                      <div className={isNullOrEmpty(imageData)?unUseClassName:''}>
+                        <CancelIcon className='icon-cancel' onClick={clearImageData} />
+                        <Avatar src={imageData} alt="tmp_icon" sx={{ width: 100, height: 100 }} />
                       </div>
                     </div>
                   </div>
                 }
                 <div className={useSeatFlg ? "image" : unUseClassName}>
-                  {props.image != null && (<Avatar src={props.image} alt="icon" sx={{ width: 100, height: 100 }} />)}
+                  {!isNullOrEmpty(props.image) && (<Avatar src={props.image} alt="icon" sx={{ width: 100, height: 100 }} />)}
                 </div>
               </Grid>
               <Grid item xs={10} sx={{height:"70px"}}>
@@ -859,7 +883,7 @@ const LeafletMarker = (props) => {
                 </Grid>
               }
               <Grid item xs={12}>
-                {(useSeatFlg && props.registedComment !== null) &&
+                {(useSeatFlg && !isNullOrEmpty(props.registedComment)) &&
                   <div className='comment-area'>
                     <CommentTextField
                       isComment={true}

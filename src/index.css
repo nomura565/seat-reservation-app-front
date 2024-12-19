@@ -55,7 +55,7 @@ code {
 }
 
 .unuse {
-  display: none;
+  display: none !important;
 }
 
 .my-button {
@@ -182,4 +182,15 @@ code {
 .date-input-wave {
   margin-left:-10px !important;
   margin-right:5px !important;
+}
+
+.icon-cancel {
+  position:relative;
+  left: 105px;
+  top:10px;
+  cursor: pointer;
+}
+
+.leaflet-marker-icon {
+  border-radius: 50%;
 }
